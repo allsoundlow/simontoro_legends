@@ -1,5 +1,7 @@
 pkg/**/**/local.config.json
+pkg/**/**/local.test.config.json
 local.config.json
+local.test.config.json
 .env
 
 node_modules/
