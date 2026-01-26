@@ -4,7 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "tsx --watch ./server.ts"
+    "dev": "tsx --watch ./server.ts",
+    "test": "tsx --test ./tests/**/*.test.ts",
+    "test:ci": "CONFIG_PATH=${CONFIG_PATH:-./local.test.config.json} tsx --test ./tests/**/*.test.ts"
   },
   "dependencies": {
     "fastify": "^5.7.1",
