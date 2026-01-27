@@ -43,6 +43,9 @@ The project is organized as a **monorepo** with shared API contracts between app
 
 ```
 /
+├── utils/                        # Shared helper functions (used by all packages)
+│   └── [helper-name].ts          # Or single utils.ts file for small utilities
+│
 ├── pkg/
 │   ├── bot/                      # Main server application (monolith)
 │   │   ├── src/

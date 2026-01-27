@@ -1,9 +1,9 @@
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 
-import {FastifyInstance} from "fastify";
-import helper from "fastify-cli/helper";
+import fastify, {FastifyInstance} from "fastify";
 
+import app from "../app";
 import {AppConfig, validateConfig} from "../config";
 import serverConfig from "../config/server-options";
 
@@ -13,19 +13,24 @@ function loadTestConfig(): AppConfig {
   return validateConfig(config);
 }
 
+/**
+ * Build a Fastify test instance.
+ *
+ * This helper directly creates a Fastify instance
+ * which provides the same functionality for testing.
+ *
+ * @param configOverrides - Optional config overrides for testing
+ * @returns A ready Fastify instance for testing with inject()
+ */
 export async function build(configOverrides?: Partial<AppConfig>): Promise<FastifyInstance> {
   const testConfig = loadTestConfig();
   const appConfig: AppConfig = {...testConfig, ...configOverrides};
 
-  const appPath = resolve(__dirname, "../app.ts");
+  const appPath = resolve(__dirname, "..");
 
-  const argv = ["-l", "info", appPath, "--options"];
+  const server = fastify(serverConfig(appConfig));
+  await server.register(app, {config: appConfig, appPath});
+  await server.ready();
 
-  const app = (await helper.build(
-    argv,
-    {config: appConfig, appPath: resolve(__dirname, "..")},
-    serverConfig(appConfig),
-  )) as FastifyInstance;
-
-  return app;
+  return server;
 }
