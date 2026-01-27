@@ -1,5 +1,7 @@
 # Project Structure
 
+> Related PRD: #[[file:docs/PRD-tech-stack.md]] (Repository Structure)
+
 Monorepo with shared API contracts between applications.
 
 ```
@@ -18,8 +20,16 @@ Monorepo with shared API contracts between applications.
 │   ├── admin-dashboard/        # React admin app (planned)
 │   └── contracts/              # Shared API contracts (planned)
 │
-├── docs/                       # Documentation
-│   └── PRD-gaming-group-chatbot.md
+├── docs/                       # Documentation (PRD split by domain)
+│   ├── PRD-overview.md         # Introduction, glossary, document index
+│   ├── PRD-tech-stack.md       # Tech stack, repo structure, config
+│   ├── PRD-architecture.md     # Architecture diagrams and principles
+│   ├── PRD-auth.md             # Auth0, multi-tenant, Telegram, Steam
+│   ├── PRD-core-features.md    # Keywords, stats, custom commands
+│   ├── PRD-platform.md         # Platform integration & abstraction
+│   ├── PRD-infrastructure.md   # Persistence, logging, monitoring
+│   ├── PRD-commands.md         # Command parsing, group admin
+│   └── PRD-admin-dashboard.md  # Admin dashboard requirements
 └── [root configs]              # tsconfig.json, eslint, prettier
 ```
 

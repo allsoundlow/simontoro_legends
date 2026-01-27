@@ -1,5 +1,7 @@
 # Database Guidelines
 
+> Related PRD: #[[file:docs/PRD-infrastructure.md]] (Requirement 6: Data Persistence)
+
 ## Query Builder
 - Use Kysely for type-safe SQL queries
 - No ORM - write explicit queries

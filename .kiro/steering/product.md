@@ -1,5 +1,7 @@
 # Product Overview
 
+> Related PRD: #[[file:docs/PRD-overview.md]]
+
 Saimontoro is a multi-tenant gaming group chatbot designed for friend gaming communities.
 
 ## Core Purpose

@@ -1,5 +1,7 @@
 # Architecture Guidelines
 
+> Related PRD: #[[file:docs/PRD-architecture.md]]
+
 ## Layered Architecture
 Follow this dependency flow - each layer only depends on layers below it:
 

@@ -1,5 +1,7 @@
 # Zod Schema Patterns
 
+> Related PRD: #[[file:docs/PRD-tech-stack.md]] (Validation), #[[file:docs/PRD-architecture.md]] (API-First Design)
+
 ## Schema Definition
 - Define schemas in dedicated files under `schemas/` or alongside related code
 - Export both schema and inferred type together

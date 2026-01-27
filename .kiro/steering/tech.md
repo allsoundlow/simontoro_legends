@@ -1,5 +1,7 @@
 # Tech Stack & Build System
 
+> Related PRD: #[[file:docs/PRD-tech-stack.md]]
+
 ## Runtime & Language
 - Node.js v22+
 - TypeScript (strict mode, ESNext target, NodeNext modules)

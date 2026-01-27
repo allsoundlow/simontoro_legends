@@ -1,5 +1,7 @@
 # Fastify Patterns
 
+> Related PRD: #[[file:docs/PRD-architecture.md]] (API Layer), #[[file:docs/PRD-infrastructure.md]] (Requirement 9: Logging)
+
 ## Route Registration
 - Use Fastify plugins for modular route registration
 - Group related routes in a single file under `routes/`
