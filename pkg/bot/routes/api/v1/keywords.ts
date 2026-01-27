@@ -28,6 +28,9 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
     method: "POST",
     url: "/groups/:groupId/keywords",
     schema: {
+      tags: ["keywords"],
+      summary: "Create a keyword",
+      description: "Create a new keyword notification for a group",
       params: groupIdParamSchema,
       body: createKeywordSchema,
       response: {
@@ -61,6 +64,9 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
     method: "GET",
     url: "/groups/:groupId/keywords",
     schema: {
+      tags: ["keywords"],
+      summary: "List keywords",
+      description: "List all keywords for a group with pagination",
       params: groupIdParamSchema,
       querystring: listKeywordsQuerySchema,
       response: {
@@ -88,6 +94,9 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
     method: "GET",
     url: "/groups/:groupId/keywords/:keywordId",
     schema: {
+      tags: ["keywords"],
+      summary: "Get a keyword",
+      description: "Get a single keyword by ID",
       params: keywordIdParamSchema,
       response: {
         200: keywordResponseSchema,
@@ -114,6 +123,9 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
     method: "PATCH",
     url: "/groups/:groupId/keywords/:keywordId",
     schema: {
+      tags: ["keywords"],
+      summary: "Update a keyword",
+      description: "Update an existing keyword",
       params: keywordIdParamSchema,
       body: updateKeywordSchema,
       response: {
@@ -147,6 +159,9 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
     method: "DELETE",
     url: "/groups/:groupId/keywords/:keywordId",
     schema: {
+      tags: ["keywords"],
+      summary: "Delete a keyword",
+      description: "Delete a keyword by ID",
       params: keywordIdParamSchema,
       response: {
         204: emptyResponseSchema,
