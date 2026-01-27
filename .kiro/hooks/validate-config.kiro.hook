@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validate Config File",
+  "description": "When a JSON config file is saved, validate it against the config schema to catch configuration errors early.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "pkg/bot/*.config.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A config file was saved. Validate it against the config schema in pkg/bot/config/index.ts. Check that all required fields are present, values are of correct types, and no sensitive data (real API keys, passwords) is accidentally committed. Report any validation errors or missing required fields."
+  }
+}

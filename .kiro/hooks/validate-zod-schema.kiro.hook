@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Validate Zod Schema",
+  "description": "When a file containing Zod schemas is saved, validate that schemas follow project conventions: proper naming with Schema suffix, exported inferred types, and appropriate validation rules.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "pkg/bot/**/schemas/**/*.ts",
+      "pkg/bot/config/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A Zod schema file was saved. Verify it follows the patterns in .kiro/steering/zod.md: 1) Schema names use camelCase with Schema suffix, 2) Types are exported using z.infer alongside schemas, 3) Validation rules are appropriate (min/max lengths, email format, etc.), 4) Use .describe() for fields that will appear in OpenAPI docs. Suggest improvements if any conventions are not followed."
+  }
+}

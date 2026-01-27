@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Sync Route Documentation",
+  "description": "When a Fastify route file is saved, ensure the route follows project conventions and has proper schema definitions for OpenAPI generation.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "pkg/bot/routes/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A Fastify route file was saved. Review it against .kiro/steering/fastify.md patterns: 1) Routes use named handler functions for better stack traces, 2) Request properties are destructured ({log, body, params, query}), 3) Zod schemas are defined for request/response validation, 4) Routes are registered as Fastify plugins with proper prefixes. Suggest any missing schema definitions or convention violations."
+  }
+}

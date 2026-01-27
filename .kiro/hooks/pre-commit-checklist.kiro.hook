@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Pre-Commit Checklist",
+  "description": "Run all pre-commit validations in one go: security scan, linting, tests, and type checking. Use this before committing to ensure code quality.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Run the complete pre-commit checklist:\n\n1. **Security Scan**: Use `git diff --cached --name-only` and `git diff --name-only` to get changed files. Scan .ts and .json files for hardcoded secrets (API keys like 'sk-', 'ghp_', tokens, passwords, Bearer tokens, base64 credentials).\n\n2. **Lint Check**: Run `yarn eslint .` from the root directory. Report any errors that need fixing.\n\n3. **Type Check**: Run `yarn tsc --noEmit` in pkg/bot to catch TypeScript errors.\n\n4. **Run Tests**: Run `cd pkg/bot && yarn test` to execute the test suite.\n\nReport results for each step with ✅ or ❌. If all checks pass, confirm the code is ready to commit. If any fail, list the issues that need to be fixed before committing."
+  }
+}

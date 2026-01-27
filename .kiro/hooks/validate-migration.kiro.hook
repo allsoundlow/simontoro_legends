@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validate Database Migration",
+  "description": "When a new database migration file is created, validate it follows Kysely migration conventions with proper naming and both up/down functions.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "pkg/bot/**/migrations/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new database migration file was created. Validate it follows .kiro/steering/database.md conventions: 1) File is named with timestamp prefix (YYYYMMDD_description.ts), 2) Both up() and down() functions are exported, 3) Table/column names use snake_case, 4) Appropriate data types are used (timestamptz for timestamps, serial for PKs). Suggest corrections if any conventions are violated."
+  }
+}

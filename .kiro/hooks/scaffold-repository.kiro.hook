@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Scaffold Repository",
+  "description": "When a new repository file is created, generate boilerplate code following the repository pattern with Kysely.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "pkg/bot/**/repositories/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new repository file was created. If the file is empty or minimal, scaffold it with the repository pattern from .kiro/steering/database.md: 1) Class with Kysely<Database> constructor injection, 2) Common CRUD methods (findById, findAll, create, update, delete), 3) Proper TypeScript types for the entity. Use the entity name from the filename (e.g., group.repository.ts → GroupRepository for Group entity)."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Sync PRD Documentation",
+  "description": "Manually trigger to analyze recent code changes and suggest updates to PRD documentation when implementation diverges from or extends the documented requirements.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze recent code changes and check if PRD documentation needs updates.\n\n1. **Get recent changes**: Use `git diff --name-only HEAD~5` to see recently modified files (or check staged changes with `git diff --cached --name-only`).\n\n2. **Identify requirement-impacting changes**: Look for changes in:\n   - Routes/API endpoints → may affect PRD-architecture.md, PRD-commands.md\n   - Services/business logic → may affect PRD-core-features.md\n   - Auth-related code → may affect PRD-auth.md\n   - Platform adapters → may affect PRD-platform.md\n   - Database/infrastructure → may affect PRD-infrastructure.md\n   - Config schemas → may affect PRD-tech-stack.md\n\n3. **Compare with PRDs**: Read the relevant PRD files in docs/ and compare against the implementation.\n\n4. **Suggest updates**: For each discrepancy found:\n   - Quote the current PRD text\n   - Describe what the code actually does\n   - Propose specific text changes to align the PRD with implementation\n\nOnly suggest changes when the implementation genuinely extends or modifies documented requirements. Don't flag minor implementation details that don't affect the product requirements."
+  }
+}
