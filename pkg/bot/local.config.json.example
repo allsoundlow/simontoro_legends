@@ -1,0 +1,27 @@
+{
+  "port": 3000,
+  "host": "localhost",
+  "logger": {
+    "logLevel": "info",
+    "pretty": true
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "saimontoro",
+    "user": "bot",
+    "password": "your-password-here"
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379
+  },
+  "telegram": {
+    "token": "your-telegram-bot-token"
+  },
+  "platforms": {
+    "steam": {
+      "apiKey": "your-steam-api-key"
+    }
+  }
+}
