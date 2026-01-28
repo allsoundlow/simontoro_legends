@@ -1,3 +1,4 @@
+import {ConflictError, NotFoundError} from "../errors";
 import type {KeywordRepository} from "../repositories/keyword.repository";
 import type {
   CreateKeywordRequest,
@@ -7,13 +8,12 @@ import type {
   UpdateKeywordRequest,
 } from "../schemas/keyword";
 
-// Service error types for route handlers to interpret
 export type ServiceError = {
   type: "not_found" | "conflict";
   message: string;
 };
 
-export type ServiceResult<T> = {ok: true; data: T} | {ok: false; error: ServiceError};
+export type ServiceResult<T> = {ok: true; data: T};
 
 // KeywordService class with business logic
 export class KeywordService {
@@ -28,17 +28,12 @@ export class KeywordService {
       pattern_type: patternType,
     });
     if (existing) {
-      return {
-        ok: false,
-        error: {
-          type: "conflict",
-          message: `Keyword with pattern "${data.pattern}" and type "${patternType}" already exists`,
-        },
-      };
+      throw new ConflictError(`Keyword with pattern "${data.pattern}" and type "${patternType}" already exists`)
     }
 
-    const keyword = await this.repo.create({...data, group_id: groupId});
-    return {ok: true, data: keyword};
+    const pk = await this.repo.create(groupId, data);
+    const keyword = await this.repo.findById(pk);
+    return {ok: true, data: keyword!};
   }
 
   async list(groupId: number, query: ListKeywordsQuery): Promise<ServiceResult<KeywordListResponse>> {
@@ -51,10 +46,7 @@ export class KeywordService {
   async getById(groupId: number, keywordId: number): Promise<ServiceResult<Keyword>> {
     const keyword = await this.repo.findById(keywordId);
     if (!keyword || keyword.group_id !== groupId) {
-      return {
-        ok: false,
-        error: {type: "not_found", message: `Keyword ${keywordId} not found`},
-      };
+      throw new NotFoundError(`Keyword ${keywordId} not found`)
     }
     return {ok: true, data: keyword};
   }
@@ -66,10 +58,7 @@ export class KeywordService {
   ): Promise<ServiceResult<Keyword>> {
     const existing = await this.repo.findById(keywordId);
     if (!existing || existing.group_id !== groupId) {
-      return {
-        ok: false,
-        error: {type: "not_found", message: `Keyword ${keywordId} not found`},
-      };
+      throw new NotFoundError(`Keyword ${keywordId} not found`)
     }
 
     // Business logic: check for duplicate if pattern/type changed
@@ -81,28 +70,29 @@ export class KeywordService {
         pattern: newPattern,
         pattern_type: newPatternType,
       });
-      if (duplicate && duplicate.id !== keywordId) {
-        return {
-          ok: false,
-          error: {type: "conflict", message: `Keyword with pattern "${newPattern}" already exists`},
-        };
+      if (duplicate && duplicate.pk !== keywordId) {
+        throw new ConflictError(`Keyword with pattern "${newPattern}" already exists`)
       }
     }
 
-    const updated = await this.repo.update(keywordId, data);
+    const pk = await this.repo.update(keywordId, data);
+    if (pk === null) {
+      throw new NotFoundError(`Keyword ${keywordId} not found during update`);
+    }
+    const updated = await this.repo.findById(pk);
     return {ok: true, data: updated!};
   }
 
   async delete(groupId: number, keywordId: number): Promise<ServiceResult<void>> {
     const existing = await this.repo.findById(keywordId);
     if (!existing || existing.group_id !== groupId) {
-      return {
-        ok: false,
-        error: {type: "not_found", message: `Keyword ${keywordId} not found`},
-      };
+      throw new NotFoundError(`Keyword ${keywordId} not found`)
     }
 
-    await this.repo.delete(keywordId);
+    const deleted = await this.repo.delete(keywordId);
+    if (!deleted) {
+      throw new NotFoundError(`Keyword ${keywordId} not found during delete`);
+    }
     return {ok: true, data: undefined};
   }
 }

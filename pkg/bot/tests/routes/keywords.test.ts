@@ -1,5 +1,6 @@
-import {after, before, describe, it} from "node:test";
 import assert from "node:assert";
+import {after, before, describe, it} from "node:test";
+
 import {FastifyInstance} from "fastify";
 
 import {build} from "../helper";
@@ -36,7 +37,7 @@ describe("Keyword API Routes", () => {
       assert.strictEqual(body.data.case_sensitive, true);
       assert.strictEqual(body.data.cooldown_seconds, 60);
       assert.strictEqual(body.data.group_id, 1);
-      assert.ok(body.data.id);
+      assert.ok(body.data.pk);
       assert.ok(body.data.created_at);
       assert.ok(body.data.updated_at);
     });
@@ -179,12 +180,12 @@ describe("Keyword API Routes", () => {
 
       const response = await app.inject({
         method: "GET",
-        url: `/api/v1/groups/5/keywords/${created.data.id}`,
+        url: `/api/v1/groups/5/keywords/${created.data.pk}`,
       });
 
       assert.strictEqual(response.statusCode, 200);
       const body = response.json();
-      assert.strictEqual(body.data.id, created.data.id);
+      assert.strictEqual(body.data.pk, created.data.pk);
       assert.strictEqual(body.data.pattern, "get-single-test");
     });
 
@@ -213,7 +214,7 @@ describe("Keyword API Routes", () => {
       // Try to access from group 7
       const response = await app.inject({
         method: "GET",
-        url: `/api/v1/groups/7/keywords/${created.data.id}`,
+        url: `/api/v1/groups/7/keywords/${created.data.pk}`,
       });
 
       assert.strictEqual(response.statusCode, 404);
@@ -232,7 +233,7 @@ describe("Keyword API Routes", () => {
 
       const response = await app.inject({
         method: "PATCH",
-        url: `/api/v1/groups/8/keywords/${created.data.id}`,
+        url: `/api/v1/groups/8/keywords/${created.data.pk}`,
         payload: {
           pattern: "updated-pattern",
           case_sensitive: true,
@@ -261,7 +262,7 @@ describe("Keyword API Routes", () => {
       // Update only pattern
       const response = await app.inject({
         method: "PATCH",
-        url: `/api/v1/groups/9/keywords/${created.data.id}`,
+        url: `/api/v1/groups/9/keywords/${created.data.pk}`,
         payload: {pattern: "new-pattern"},
       });
 
@@ -301,7 +302,7 @@ describe("Keyword API Routes", () => {
       // Try to update to conflicting pattern
       const response = await app.inject({
         method: "PATCH",
-        url: `/api/v1/groups/10/keywords/${created.data.id}`,
+        url: `/api/v1/groups/10/keywords/${created.data.pk}`,
         payload: {pattern: "existing-pattern"},
       });
 
@@ -323,7 +324,7 @@ describe("Keyword API Routes", () => {
 
       const response = await app.inject({
         method: "DELETE",
-        url: `/api/v1/groups/11/keywords/${created.data.id}`,
+        url: `/api/v1/groups/11/keywords/${created.data.pk}`,
       });
 
       assert.strictEqual(response.statusCode, 204);
@@ -331,7 +332,7 @@ describe("Keyword API Routes", () => {
       // Verify it's deleted
       const getResponse = await app.inject({
         method: "GET",
-        url: `/api/v1/groups/11/keywords/${created.data.id}`,
+        url: `/api/v1/groups/11/keywords/${created.data.pk}`,
       });
       assert.strictEqual(getResponse.statusCode, 404);
     });

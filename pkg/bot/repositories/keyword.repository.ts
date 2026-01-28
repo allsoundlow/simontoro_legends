@@ -1,78 +1,65 @@
 import type {CreateKeywordRequest, Keyword, UpdateKeywordRequest} from "../schemas/keyword";
-import type {FieldFilter, ListQuery, ListResponse, Repository} from "./repository";
+import type {
+  FieldFilter,
+  ListQuery,
+  ListResult,
+  StorageAdapter,
+} from "../storage/adapter";
 
-// KeywordRepository is a Repository specialized for Keyword entity
-export type KeywordRepository = Repository<Keyword, CreateKeywordRequest, UpdateKeywordRequest>;
+export class KeywordRepository {
+  constructor(private storage: StorageAdapter<Keyword>) {}
 
-// In-memory implementation for testing
-export class InMemoryKeywordRepository implements KeywordRepository {
-  private keywords: Map<number, Keyword> = new Map();
-  private nextId = 1;
+  async findById(pk: number): Promise<Keyword | null> {
+    return this.storage.get(pk);
+  }
 
-  async findById(id: number): Promise<Keyword | null> {
-    return this.keywords.get(id) ?? null;
+  async findByGroupId(groupId: number, query?: ListQuery): Promise<ListResult<Keyword>> {
+    return this.storage.getAllByFields({group_id: groupId}, query);
+  }
+
+  async findByPattern(groupId: number, pattern: string): Promise<Keyword | null> {
+    return this.storage.getOneByFields({group_id: groupId, pattern});
   }
 
   async findOneBy(fields: FieldFilter<Keyword>): Promise<Keyword | null> {
-    for (const keyword of this.keywords.values()) {
-      if (this.matchesFields(keyword, fields)) {
-        return keyword;
-      }
-    }
-    return null;
+    return this.storage.getOneByFields(fields);
   }
 
   async findAllBy(
     fields: FieldFilter<Keyword>,
-    query: ListQuery = {},
-  ): Promise<ListResponse<Keyword>> {
-    const {limit = 50, offset = 0} = query;
-    const filtered = Array.from(this.keywords.values()).filter((k) => this.matchesFields(k, fields));
-    return {
-      data: filtered.slice(offset, offset + limit),
-      pagination: {total: filtered.length, limit, offset},
-    };
+    query?: ListQuery,
+  ): Promise<ListResult<Keyword>> {
+    return this.storage.getAllByFields(fields, query);
   }
 
-  async create(data: CreateKeywordRequest & {group_id: number}): Promise<Keyword> {
+  async create(groupId: number, data: CreateKeywordRequest): Promise<number> {
     const now = new Date().toISOString();
-    const keyword: Keyword = {
-      id: this.nextId++,
-      group_id: data.group_id,
+    return this.storage.insert({
+      group_id: groupId,
       pattern: data.pattern,
       pattern_type: data.pattern_type ?? "exact",
       case_sensitive: data.case_sensitive ?? false,
       cooldown_seconds: data.cooldown_seconds ?? 0,
       created_at: now,
       updated_at: now,
-    };
-    this.keywords.set(keyword.id, keyword);
-    return keyword;
+    });
   }
 
-  async update(id: number, data: UpdateKeywordRequest): Promise<Keyword | null> {
-    const existing = this.keywords.get(id);
-    if (!existing) return null;
-    const updated: Keyword = {
-      ...existing,
+  async update(pk: number, data: UpdateKeywordRequest): Promise<number | null> {
+    if (Object.keys(data).length === 0) {
+      return pk;
+    }
+    return this.storage.update(pk, {
       ...data,
       updated_at: new Date().toISOString(),
-    };
-    this.keywords.set(id, updated);
-    return updated;
+    });
   }
 
-  async delete(id: number): Promise<boolean> {
-    return this.keywords.delete(id);
+  async delete(pk: number): Promise<boolean> {
+    return this.storage.remove(pk);
   }
 
-  // Helper to check if entity matches all provided field values
-  private matchesFields(entity: Keyword, fields: FieldFilter<Keyword>): boolean {
-    for (const [key, value] of Object.entries(fields)) {
-      if (value !== undefined && entity[key as keyof Keyword] !== value) {
-        return false;
-      }
-    }
-    return true;
+  async countByGroup(groupId: number): Promise<number> {
+    return this.storage.count({group_id: groupId});
   }
 }

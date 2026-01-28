@@ -43,7 +43,7 @@ export type UpdateKeywordRequest = z.infer<typeof updateKeywordSchema>;
 
 // Keyword entity schema (internal)
 export const keywordSchema = keywordBaseSchema.extend({
-  id: z.number().int().positive().describe("Unique identifier"),
+  pk: z.number().int().positive().describe("Primary key identifier"),
   group_id: z.number().int().positive().describe("ID of the group this keyword belongs to"),
   created_at: z.string().datetime().describe("ISO 8601 timestamp of creation"),
   updated_at: z.string().datetime().describe("ISO 8601 timestamp of last update"),
@@ -70,7 +70,7 @@ export const groupIdParamSchema = z.object({
 export type GroupIdParam = z.infer<typeof groupIdParamSchema>;
 
 export const keywordIdParamSchema = groupIdParamSchema.extend({
-  keywordId: z.coerce.number().int().positive().describe("Keyword identifier"),
+  keywordId: z.coerce.number().int().positive().describe("Keyword primary key"),
 });
 export type KeywordIdParam = z.infer<typeof keywordIdParamSchema>;
 

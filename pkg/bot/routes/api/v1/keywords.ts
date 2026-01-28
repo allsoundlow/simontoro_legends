@@ -1,7 +1,5 @@
 import {FastifyInstance} from "fastify";
 import {ZodTypeProvider} from "fastify-type-provider-zod";
-
-import {ConflictError, NotFoundError} from "../../../errors";
 import {emptyResponseSchema, errorResponseSchema} from "../../../schemas/common/error";
 import {
   createKeywordSchema,
@@ -47,14 +45,7 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       const result = await service.create(groupId, body);
 
-      if (result.ok === false) {
-        if (result.error.type === "conflict") {
-          throw new ConflictError(result.error.message);
-        }
-        throw new NotFoundError(result.error.message);
-      }
-
-      log.info({groupId, keywordId: result.data.id}, "Keyword created");
+      log.info({groupId, keywordPk: result.data.pk}, "Keyword created");
       return reply.status(201).send({data: result.data});
     },
   });
@@ -81,10 +72,6 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       const result = await service.list(groupId, query);
 
-      if (result.ok === false) {
-        throw new NotFoundError(result.error.message);
-      }
-
       return result.data;
     },
   });
@@ -109,10 +96,6 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
       log.debug({groupId, keywordId}, "Getting keyword");
 
       const result = await service.getById(groupId, keywordId);
-
-      if (result.ok === false) {
-        throw new NotFoundError(result.error.message);
-      }
 
       return {data: result.data};
     },
@@ -142,13 +125,6 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       const result = await service.update(groupId, keywordId, body);
 
-      if (result.ok === false) {
-        if (result.error.type === "conflict") {
-          throw new ConflictError(result.error.message);
-        }
-        throw new NotFoundError(result.error.message);
-      }
-
       log.info({groupId, keywordId}, "Keyword updated");
       return {data: result.data};
     },
@@ -173,11 +149,7 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       log.info({groupId, keywordId}, "Deleting keyword");
 
-      const result = await service.delete(groupId, keywordId);
-
-      if (result.ok === false) {
-        throw new NotFoundError(result.error.message);
-      }
+      await service.delete(groupId, keywordId);
 
       log.info({groupId, keywordId}, "Keyword deleted");
       return reply.status(204).send();

@@ -52,7 +52,7 @@ psql -h localhost -p 5432 -U bot -d saimontoro
 Connection string for app config:
 ```json
 {
-  "database": {
+  "pg": {
     "host": "localhost",
     "port": 5432,
     "database": "saimontoro",

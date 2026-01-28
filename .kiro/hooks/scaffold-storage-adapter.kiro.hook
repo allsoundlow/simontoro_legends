@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Scaffold Storage Adapter",
+  "description": "When a new storage adapter file is created, generate boilerplate implementing the StorageAdapter interface.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "pkg/bot/**/storage/adapters/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new storage adapter file was created. If the file is empty or minimal, scaffold it following the pattern from .kiro/steering/repositories.md: 1) Implement StorageAdapter<T extends Entity> interface, 2) Include all required methods: get, getOneByFields, getAllByFields, insert, update, remove, count, 3) Handle pagination in getAllByFields, 4) Use appropriate data source client in constructor. Reference InMemoryAdapter or PostgresAdapter examples from the steering file. Note: Use 'pk' as the primary key field name, not 'id'."
+  }
+}

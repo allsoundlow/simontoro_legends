@@ -16,16 +16,9 @@
 - **Telegram**: grammy or node-telegram-bot-api (Phase 1 - Primary)
 - **Discord**: discord.js (Phase 2 - Future)
 
-### Admin Dashboard (pkg/admin-dashboard)
-- **Framework**: React with TypeScript
-- **UI Library**: shadcn/ui, Bootstrap, or Material UI (developer preference)
-- **Build Tool**: Vite
-- **State Management**: TanStack Query for server state
-- **API Communication**: RPC-style calls using shared API contracts from OpenAPI spec
-
-### Shared Packages (pkg/shared or pkg/contracts)
-- **API Contracts**: Shared TypeScript types and Zod schemas between server and client
-- **Generated from OpenAPI**: Client SDK auto-generated from Fastify's OpenAPI documentation
+### Shared Packages (pkg/contracts) - Planned
+- **API Contracts**: Shared TypeScript types and Zod schemas
+- **Used for**: Type sharing between bot and future integrations
 
 ### Infrastructure
 - **Containerization**: Docker
@@ -39,7 +32,7 @@
 
 ## Repository Structure
 
-The project is organized as a **monorepo** with shared API contracts between applications:
+The project is organized as a **monorepo** with a single main application:
 
 ```
 /
@@ -48,28 +41,28 @@ The project is organized as a **monorepo** with shared API contracts between app
 │
 ├── pkg/
 │   ├── bot/                      # Main server application (monolith)
-│   │   ├── src/
-│   │   │   ├── adapters/         # Platform adapters (Telegram, Discord)
-│   │   │   ├── services/         # Business logic services
-│   │   │   ├── repositories/     # Data access layer
-│   │   │   ├── routes/           # Fastify API routes
-│   │   │   ├── schemas/          # Zod schemas (auto-generate OpenAPI)
-│   │   │   └── connectors/       # Gaming platform connectors
-│   │   ├── config/
-│   │   ├── local.config.json
+│   │   ├── adapters/             # Platform adapters (Telegram, Discord)
+│   │   ├── services/             # Business logic services
+│   │   ├── repositories/         # Business queries using storage adapters
+│   │   ├── storage/              # Storage abstraction layer
+│   │   │   ├── adapter.ts        # StorageAdapter interface + types
+│   │   │   ├── adapters/         # Adapter implementations
+│   │   │   │   ├── in-memory.adapter.ts  # For testing
+│   │   │   │   └── postgres.adapter.ts   # PostgreSQL via Kysely
+│   │   │   ├── connections/      # Connection setup
+│   │   │   │   ├── index.ts      # Connection factory
+│   │   │   │   ├── memory.connection.ts
+│   │   │   │   └── postgres.connection.ts
+│   │   │   └── index.ts          # Exports + createAdapter factory
+│   │   ├── routes/               # Fastify API routes (internal: health, webhooks, OAuth)
+│   │   ├── schemas/              # Zod schemas (auto-generate OpenAPI)
+│   │   ├── connectors/           # Gaming platform connectors
+│   │   ├── config/               # Configuration schemas
+│   │   ├── local.config.json     # Local development config (gitignored)
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   ├── admin-dashboard/          # React admin application
-│   │   ├── src/
-│   │   │   ├── components/
-│   │   │   ├── pages/
-│   │   │   ├── api/              # Generated API client from OpenAPI
-│   │   │   └── hooks/            # TanStack Query hooks
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   └── contracts/                # Shared API contracts
+│   └── contracts/                # Shared API contracts (planned)
 │       ├── src/
 │       │   ├── schemas/          # Shared Zod schemas
 │       │   └── types/            # Shared TypeScript types
@@ -93,10 +86,10 @@ Configuration is managed through JSON config files, following the existing patte
     "logLevel": "info",
     "pretty": true
   },
-  "database": {
+  "pg": {
     "host": "localhost",
     "port": 5432,
-    "database": "gaming_bot",
+    "database": "saimontoro",
     "user": "bot",
     "password": "secret"
   },
@@ -120,4 +113,22 @@ Configuration is managed through JSON config files, following the existing patte
 }
 ```
 
+For testing without a database, simply omit the `pg` configuration — the application will use in-memory storage:
+```json
+{
+  "port": 3001,
+  "host": "localhost",
+  "logger": {"logLevel": "info", "pretty": false}
+}
+```
+
 No `.env` files are used. Different environments use different config files (e.g., `local.config.json`, `prod.config.json`).
+
+## Administration Model
+
+All group configuration is done through Telegram bot commands — no separate admin dashboard required:
+
+- **Registration**: Administrators register via `/register` command in private chat with the bot
+- **Group Setup**: Add bot to group, bot verifies Telegram admin status
+- **Configuration**: All keywords, commands, and settings managed via bot commands in the group
+- **Authentication**: Telegram user ID used as unique identifier — no separate login required

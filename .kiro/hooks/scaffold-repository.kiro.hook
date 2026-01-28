@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "name": "Scaffold Repository",
-  "description": "When a new repository file is created, generate boilerplate code following the repository pattern with Kysely.",
+  "description": "When a new repository file is created, generate boilerplate code following the storage adapter pattern.",
   "version": "1",
   "when": {
     "type": "fileCreated",
@@ -11,6 +11,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A new repository file was created. If the file is empty or minimal, scaffold it with the repository pattern from .kiro/steering/database.md: 1) Class with Kysely<Database> constructor injection, 2) Common CRUD methods (findById, findAll, create, update, delete), 3) Proper TypeScript types for the entity. Use the entity name from the filename (e.g., group.repository.ts → GroupRepository for Group entity)."
+    "prompt": "A new repository file was created. If the file is empty or minimal, scaffold it following the pattern from .kiro/steering/repositories.md: 1) Class with StorageAdapter<Entity> constructor injection, 2) Domain-specific query methods (findById using pk, findByGroupId, create, update, delete), 3) Handle timestamps (created_at, updated_at) in create/update methods, 4) Apply schema defaults in create method. Use the entity name from the filename (e.g., keyword.repository.ts → KeywordRepository for Keyword entity). Note: Use 'pk' as the primary key field name, not 'id'."
   }
 }

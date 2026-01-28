@@ -2,9 +2,9 @@
 
 ## Introduction
 
-This document defines the requirements for the Keyword Notification System REST API. The API provides endpoints for managing keywords that trigger notifications when mentioned in group chat messages. This is the administrative API layer used by the admin dashboard and other clients to perform CRUD operations on keywords.
+This document defines the requirements for the Keyword Notification System REST API. The API provides endpoints for managing keywords that trigger notifications when mentioned in group chat messages. This is the internal API layer used by the Telegram bot adapter and other internal components to perform CRUD operations on keywords.
 
-The API is scoped to groups (multi-tenant) and follows RESTful design principles with proper HTTP methods, status codes, and versioning under the `/api/v1/` prefix.
+The API is scoped to groups (multi-tenant) and follows RESTful design principles with proper HTTP methods, status codes, and versioning under the `/api/v1/` prefix. Group administrators manage keywords via Telegram bot commands (e.g., `/keyword add`, `/keyword remove`), which internally call this API.
 
 ## Glossary
 
@@ -35,7 +35,7 @@ The API is scoped to groups (multi-tenant) and follows RESTful design principles
 
 ### Requirement 2: List Keywords
 
-**User Story:** As a user, I want to retrieve all keywords configured for a group via the API, so that I can display them in the admin dashboard.
+**User Story:** As a user, I want to retrieve all keywords configured for a group via the API, so that I can display them when requested via bot commands.
 
 #### Acceptance Criteria
 

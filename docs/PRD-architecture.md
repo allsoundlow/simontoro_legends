@@ -1,6 +1,6 @@
 # Architecture Overview
 
-The application follows a **monolithic architecture** for the server with a **separate admin dashboard application**. Both applications share API contracts through the monorepo structure. The server auto-generates OpenAPI documentation from TypeScript/Zod schemas, which the admin dashboard uses for type-safe API communication.
+The application follows a **monolithic architecture** for the server. All group configuration is done through Telegram bot commands — no separate admin dashboard is required. The server auto-generates OpenAPI documentation from TypeScript/Zod schemas for internal API endpoints.
 
 ## High-Level Architecture
 
@@ -10,32 +10,36 @@ The application follows a **monolithic architecture** for the server with a **se
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌─────────────────────────────────────────────────────────────┐    │
-│  │                  pkg/contracts (Shared)                      │    │
+│  │                  pkg/bot (Server Monolith)                   │    │
+│  │                                                              │    │
+│  │  ┌───────────────────────────────────────────────────────┐  │    │
+│  │  │ Fastify + OpenAPI/Swagger                             │  │    │
+│  │  │ (Auto-generated from Zod)                             │  │    │
+│  │  │                                                       │  │    │
+│  │  │ • Internal API for health checks, metrics             │  │    │
+│  │  │ • Webhook endpoints for Telegram                      │  │    │
+│  │  │ • OAuth callbacks for Steam linking                   │  │    │
+│  │  └───────────────────────────────────────────────────────┘  │    │
+│  │                                                              │    │
+│  │  ┌───────────────────────────────────────────────────────┐  │    │
+│  │  │ Telegram Bot Interface                                │  │    │
+│  │  │                                                       │  │    │
+│  │  │ • All group configuration via bot commands            │  │    │
+│  │  │ • Admin registration via private chat                 │  │    │
+│  │  │ • Keyword, command, and settings management           │  │    │
+│  │  └───────────────────────────────────────────────────────┘  │    │
+│  │                                                              │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                  pkg/contracts (Planned)                     │    │
 │  │  ┌─────────────────┐  ┌─────────────────┐                   │    │
 │  │  │ Zod Schemas     │  │ TypeScript      │                   │    │
-│  │  │ (API Contracts) │  │ Types           │                   │    │
+│  │  │ (Shared Types)  │  │ Types           │                   │    │
 │  │  └─────────────────┘  └─────────────────┘                   │    │
-│  └──────────────────────────┬──────────────────────────────────┘    │
-│                             │                                        │
-│              ┌──────────────┴──────────────┐                        │
-│              ▼                              ▼                        │
-│  ┌─────────────────────────┐  ┌─────────────────────────────────┐  │
-│  │  pkg/admin-dashboard    │  │  pkg/bot (Server Monolith)      │  │
-│  │  (React Application)    │  │                                 │  │
-│  │                         │  │  ┌───────────────────────────┐  │  │
-│  │  ┌───────────────────┐  │  │  │ Fastify + OpenAPI/Swagger │  │  │
-│  │  │ TanStack Query    │  │  │  │ (Auto-generated from Zod) │  │  │
-│  │  │ + Generated API   │◄─┼──┼─►│                           │  │  │
-│  │  │ Client            │  │  │  └───────────────────────────┘  │  │
-│  │  └───────────────────┘  │  │                                 │  │
-│  │                         │  │                                 │  │
-│  │  ┌───────────────────┐  │  │                                 │  │
-│  │  │ React Components  │  │  │                                 │  │
-│  │  │ (shadcn/MUI/etc)  │  │  │                                 │  │
-│  │  └───────────────────┘  │  │                                 │  │
-│  └─────────────────────────┘  │                                 │  │
-│                               │                                 │  │
-└───────────────────────────────┴─────────────────────────────────┴──┘
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Server Internal Architecture (pkg/bot)
@@ -51,12 +55,12 @@ The application follows a **monolithic architecture** for the server with a **se
 │  │                                                                │ │
 │  │  ┌──────────────────┐  ┌──────────────────┐                   │ │
 │  │  │  REST Routes     │  │  OpenAPI/Swagger │                   │ │
-│  │  │  (Admin API)     │  │  Documentation   │                   │ │
+│  │  │  (Internal API)  │  │  Documentation   │                   │ │
 │  │  │                  │  │  (Auto-generated)│                   │ │
-│  │  │  • /commands     │  │                  │                   │ │
-│  │  │  • /keywords     │  │  Zod Schemas →   │                   │ │
-│  │  │  • /groups       │  │  OpenAPI Spec    │                   │ │
-│  │  │  • /stats        │  │                  │                   │ │
+│  │  │  • /health       │  │                  │                   │ │
+│  │  │  • /metrics      │  │  Zod Schemas →   │                   │ │
+│  │  │  • /webhook      │  │  OpenAPI Spec    │                   │ │
+│  │  │  • /oauth/*      │  │                  │                   │ │
 │  │  └──────────────────┘  └──────────────────┘                   │ │
 │  │                                                                │ │
 │  └────────────────────────────────────────────────────────────────┘ │
@@ -70,10 +74,11 @@ The application follows a **monolithic architecture** for the server with a **se
 │  │  ┌─────────────────┐  ┌─────────────────┐                     │ │
 │  │  │ Telegram        │  │ Discord         │                     │ │
 │  │  │ Adapter         │  │ Adapter         │                     │ │
-│  │  │                 │  │                 │                     │ │
+│  │  │                 │  │ (Phase 2)       │                     │ │
 │  │  │ • Webhook/Poll  │  │ • Gateway       │                     │ │
 │  │  │ • Message Parse │  │ • Slash Cmds    │                     │ │
 │  │  │ • Response Fmt  │  │ • Embeds        │                     │ │
+│  │  │ • Admin Cmds    │  │                 │                     │ │
 │  │  └────────┬────────┘  └────────┬────────┘                     │ │
 │  │           │                    │                              │ │
 │  │           └────────┬───────────┘                              │ │
@@ -107,7 +112,7 @@ The application follows a **monolithic architecture** for the server with a **se
 │  │  │                 │  │                 │  │                │ │ │
 │  │  │ • Fetch Stats   │  │ • CRUD Cmds     │  │ • Permissions  │ │ │
 │  │  │ • Compare       │  │ • Variables     │  │ • Settings     │ │ │
-│  │  │ • Cache         │  │ • Media         │  │                │ │ │
+│  │  │ • Cache         │  │ • Media         │  │ • Registration │ │ │
 │  │  └─────────────────┘  └─────────────────┘  └────────────────┘ │ │
 │  │                                                                │ │
 │  └────────────────────────────────────────────────────────────────┘ │
@@ -122,10 +127,10 @@ The application follows a **monolithic architecture** for the server with a **se
 │  │  │ Repository      │  │ Repository      │  │ Repository     │ │ │
 │  │  └─────────────────┘  └─────────────────┘  └────────────────┘ │ │
 │  │                                                                │ │
-│  │  ┌─────────────────┐  ┌─────────────────┐                     │ │
-│  │  │ Stats Cache     │  │ Audit Log       │                     │ │
-│  │  │ Repository      │  │ Repository      │                     │ │
-│  │  └─────────────────┘  └─────────────────┘                     │ │
+│  │  ┌─────────────────┐  ┌─────────────────┐  ┌────────────────┐ │ │
+│  │  │ Admin           │  │ Stats Cache     │  │ Audit Log      │ │ │
+│  │  │ Repository      │  │ Repository      │  │ Repository     │ │ │
+│  │  └─────────────────┘  └─────────────────┘  └────────────────┘ │ │
 │  │                                                                │ │
 │  └────────────────────────────────────────────────────────────────┘ │
 │                              │                                      │
@@ -138,9 +143,10 @@ The application follows a **monolithic architecture** for the server with a **se
 │  │  │ PostgreSQL      │  │ Redis           │  │ Gaming API     │ │ │
 │  │  │ (Kysely)        │  │ (Cache)         │  │ Connectors     │ │ │
 │  │  │                 │  │                 │  │                │ │ │
-│  │  │ • Groups        │  │ • Stats Cache   │  │ • Steam        │ │ │
-│  │  │ • Commands      │  │ • Rate Limits   │  │ • PSN          │ │ │
-│  │  │ • Keywords      │  │ • Cooldowns     │  │ • Xbox         │ │ │
+│  │  │ • Admins        │  │ • Stats Cache   │  │ • Steam        │ │ │
+│  │  │ • Groups        │  │ • Rate Limits   │  │ • PSN          │ │ │
+│  │  │ • Commands      │  │ • Cooldowns     │  │ • Xbox         │ │ │
+│  │  │ • Keywords      │  │                 │  │                │ │ │
 │  │  │ • Audit Logs    │  │                 │  │                │ │ │
 │  │  └─────────────────┘  └─────────────────┘  └────────────────┘ │ │
 │  │                                                                │ │
@@ -156,18 +162,24 @@ The application follows a **monolithic architecture** for the server with a **se
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
 │  │   Telegram   │  │   Discord    │  │ Gaming APIs  │               │
 │  │   Bot API    │  │   Gateway    │  │ Steam/PSN/   │               │
-│  │              │  │              │  │ Xbox         │               │
+│  │              │  │   (Phase 2)  │  │ Xbox         │               │
 │  └──────────────┘  └──────────────┘  └──────────────┘               │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Architecture Principles
 
-### Monorepo with Shared Contracts
-- Single repository containing all packages
-- Shared API contracts ensure type safety between server and client
-- OpenAPI spec generated from Zod schemas provides single source of truth
-- Admin dashboard generates API client from OpenAPI spec
+### Single Application Architecture
+- All functionality contained in pkg/bot
+- No separate admin dashboard — all configuration via Telegram bot commands
+- Simpler deployment and maintenance
+- Reduced complexity in authentication and state synchronization
+
+### Telegram-First Configuration
+- Administrators register via `/register` command in private chat
+- Group configuration done through bot commands in the group
+- No web UI required for basic operations
+- Telegram admin status used for authorization
 
 ### Layered Architecture (pkg/bot)
 - Clear separation between API, Platform Adapters, Business Logic, Data Access, and Infrastructure
@@ -183,7 +195,7 @@ The application follows a **monolithic architecture** for the server with a **se
 ### API-First Design
 - Fastify routes define API contracts using Zod schemas
 - OpenAPI/Swagger documentation auto-generated from schemas
-- Admin dashboard consumes API via generated client
+- Internal APIs for health checks, metrics, and webhooks
 - Type safety maintained across the entire stack
 
 ### SOLID Principles (Applied Pragmatically)
