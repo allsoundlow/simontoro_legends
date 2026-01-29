@@ -2,55 +2,50 @@
 
 ## Requirement 11: Multi-Tenant Administration
 
-**User Story:** As a potential administrator, I want to register my own account and create group configurations, so that I can manage my gaming community's bot independently from other administrators.
+**User Story:** As a potential administrator, I want to register my account via the Telegram bot and create group configurations, so that I can manage my gaming community's bot independently from other administrators.
 
 ### Acceptance Criteria
 
-1. THE System SHALL allow any person to register as an administrator through the Admin_Dashboard
-2. WHEN an administrator registers, THE System SHALL create an isolated account with no access to other administrators' data
+1. THE System SHALL allow any person to register as an administrator by starting a private chat with the bot and using the `/register` command
+2. WHEN an administrator registers, THE System SHALL create an isolated account linked to their Telegram user ID with no access to other administrators' data
 3. WHEN an administrator creates a group configuration, THE System SHALL associate it exclusively with that administrator's account
 4. THE System SHALL ensure that Administrator A cannot view, modify, or access any data belonging to Administrator B
-5. WHEN an administrator logs into the Admin_Dashboard, THE System SHALL display only their own groups and configurations
+5. WHEN an administrator interacts with the bot, THE System SHALL identify them by their Telegram user ID
 6. THE System SHALL support multiple groups per administrator account
-7. WHEN an administrator deletes their account, THE System SHALL remove all associated group configurations and data
+7. WHEN an administrator deletes their account via `/deleteaccount`, THE System SHALL remove all associated group configurations and data after confirmation
 8. THE System SHALL provide audit logging of all administrative actions per administrator
 
 ---
 
-## Requirement 12: Administrator Authentication (Auth0)
+## Requirement 12: Administrator Authentication (Telegram-Based)
 
-**User Story:** As an administrator, I want to securely log into the admin dashboard using Auth0, so that I don't need to manage separate credentials and can use my existing social accounts.
+**User Story:** As an administrator, I want to authenticate using my Telegram account, so that I don't need separate credentials and can manage everything through the chat interface.
 
 ### Acceptance Criteria
 
-1. THE Admin_Dashboard SHALL integrate with [Auth0](https://auth0.com/) for administrator authentication
-2. THE System SHALL delegate all authentication and password management to Auth0 — no passwords stored in the system
-3. WHEN an administrator accesses the dashboard, THE System SHALL redirect to Auth0's Universal Login page
-4. Auth0 SHALL support multiple identity providers (Google, GitHub, email/password) as configured in the Auth0 tenant
-5. WHEN an administrator successfully authenticates via Auth0, THE System SHALL create or retrieve their administrator account using the Auth0 user ID
-6. THE System SHALL validate Auth0 JWT tokens on each API request
-7. WHEN an Auth0 session expires, THE Admin_Dashboard SHALL redirect the administrator to re-authenticate
-8. THE System SHALL support session management with configurable timeout (aligned with Auth0 token expiration)
-9. WHEN an administrator logs out, THE System SHALL invalidate the session and redirect to Auth0 logout endpoint
-10. THE System SHALL store only the Auth0 user ID and profile information (name, email) — never credentials
+1. THE System SHALL authenticate administrators using their Telegram user ID — no separate login required
+2. WHEN a user sends a command to the bot, THE System SHALL identify them by their Telegram user ID
+3. THE System SHALL store administrator accounts linked to Telegram user IDs
+4. WHEN an administrator sends admin commands in a group, THE System SHALL verify they are both a registered administrator AND have Telegram admin/moderator privileges in that group
+5. THE System SHALL support session-less authentication — each command is authenticated independently via Telegram user ID
+6. WHEN an administrator's Telegram account is deleted or deactivated, THE System SHALL retain their data but mark the account as inactive
+7. THE System SHALL NOT store any passwords or credentials — Telegram handles all authentication
 
 ---
 
-## Requirement 13: Telegram Group Connection
+## Requirement 13: Telegram Account Connection
 
-**User Story:** As an administrator, I want to connect my Telegram account to the system, so that the bot can access and monitor my group chats.
+**User Story:** As an administrator, I want to connect my Telegram account to the system by registering with the bot, so that I can manage groups where I have admin privileges.
 
 ### Acceptance Criteria
 
-1. THE Admin_Dashboard SHALL provide a mechanism to connect to Telegram via QR code scan or phone number verification
-2. WHEN an administrator initiates Telegram connection, THE System SHALL display a QR code for the Telegram app to scan
-3. WHEN the QR code is scanned successfully, THE System SHALL establish a Telegram_Session for that administrator
-4. THE System SHALL securely store the Telegram_Session credentials for persistent access
-5. WHEN a Telegram_Session is established, THE Admin_Dashboard SHALL display the administrator's available Telegram groups
-6. THE Administrator SHALL be able to select which Telegram groups to enable bot functionality for
-7. WHEN a Telegram_Session expires or is revoked, THE System SHALL notify the administrator and request re-authentication
-8. THE System SHALL support multiple Telegram accounts per administrator (for managing different communities)
-9. WHEN an administrator disconnects a Telegram account, THE System SHALL stop monitoring associated groups and remove the session
+1. THE Bot SHALL provide a `/register` command in private chat to register as an administrator
+2. WHEN a user sends `/register`, THE System SHALL create an administrator account linked to their Telegram user ID
+3. WHEN an administrator adds the bot to a group where they have admin privileges, THE System SHALL allow them to configure that group
+4. THE System SHALL verify Telegram admin status in the group before allowing configuration changes
+5. WHEN an administrator is demoted in a Telegram group, THE System SHALL revoke their configuration privileges for that group
+6. THE System SHALL support one administrator account per Telegram user
+7. WHEN an administrator uses `/unregister`, THE System SHALL disconnect their account and stop managing their groups after confirmation
 
 ---
 
@@ -61,10 +56,10 @@
 ### Acceptance Criteria
 
 1. THE Bot SHALL be registered with Steam Web API and possess a valid API key for reading user data
-2. WHEN a group member initiates Steam account linking, THE Bot SHALL guide them through the OAuth/authentication process
+2. WHEN a group member initiates Steam account linking via `/linksteam`, THE Bot SHALL guide them through the OAuth/authentication process
 3. WHEN a Steam account is successfully linked, THE System SHALL store the Steam ID and access permissions for that user
 4. THE Bot SHALL only access Steam data for users who have explicitly linked their accounts
-5. WHEN a user unlinks their Steam account, THE System SHALL immediately revoke access and delete stored credentials
+5. WHEN a user unlinks their Steam account via `/unlinksteam`, THE System SHALL immediately revoke access and delete stored credentials
 6. THE System SHALL display which gaming accounts are linked for each user (without exposing sensitive credentials)
 7. WHEN requesting statistics, THE Bot SHALL verify the target user has linked their account before making API calls
 8. THE System SHALL support linking multiple gaming platform accounts per user (Steam initially, PSN/Xbox in future)
@@ -77,29 +72,27 @@
 
 ### Overview
 
-The system uses a layered authentication approach with Auth0 handling all credential management:
+The system uses Telegram-based authentication — administrators register and authenticate directly through the bot using their Telegram account. No separate web authentication is required.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    Authentication Layers                             │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  Layer 1: Admin Dashboard Authentication (Auth0)                     │
+│  Layer 1: Administrator Authentication (Telegram)                    │
 │  ┌─────────────────────────────────────────────────────────────┐    │
-│  │  • Auth0 Universal Login (https://auth0.com/)                │    │
-│  │  • Supports Google, GitHub, email/password via Auth0         │    │
-│  │  • JWT tokens validated on each request                      │    │
-│  │  • NO passwords stored in our system                         │    │
-│  │  • Only Auth0 user ID and profile info stored                │    │
+│  │  • Registration via /register command in private chat        │    │
+│  │  • Telegram user ID used as unique identifier                │    │
+│  │  • NO passwords stored — Telegram handles authentication     │    │
+│  │  • Each command authenticated via Telegram user ID           │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 │                              │                                       │
 │                              ▼                                       │
-│  Layer 2: Telegram Connection (QR/Phone)                            │
+│  Layer 2: Group Admin Verification                                  │
 │  ┌─────────────────────────────────────────────────────────────┐    │
-│  │  • QR code scan via Telegram app                             │    │
-│  │  • Phone number + verification code fallback                 │    │
-│  │  • Telegram session stored securely (encrypted)              │    │
-│  │  • Access to admin's Telegram groups                         │    │
+│  │  • Bot checks Telegram admin status in group                 │    │
+│  │  • Only group admins can configure bot for that group        │    │
+│  │  • Admin status verified on each configuration command       │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 │                              │                                       │
 │                              ▼                                       │
@@ -114,36 +107,32 @@ The system uses a layered authentication approach with Auth0 handling all creden
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Auth0 Integration Flow
+### Telegram-Based Authentication Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    Auth0 Authentication Flow                         │
+│                    Administrator Registration Flow                   │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  1. Admin visits Admin Dashboard                                    │
+│  1. User starts private chat with bot                               │
 │                    │                                                 │
 │                    ▼                                                 │
-│  2. Dashboard redirects to Auth0 Universal Login                    │
-│     (https://YOUR_DOMAIN.auth0.com/authorize)                       │
+│  2. User sends /register command                                    │
 │                    │                                                 │
 │                    ▼                                                 │
-│  3. Admin chooses login method (Google, GitHub, email/password)     │
-│     All handled by Auth0 — our system never sees credentials        │
+│  3. Bot creates administrator account linked to Telegram user ID    │
 │                    │                                                 │
 │                    ▼                                                 │
-│  4. Auth0 authenticates and returns JWT tokens                      │
-│     (access_token, id_token, refresh_token)                         │
+│  4. Bot confirms registration and explains next steps               │
 │                    │                                                 │
 │                    ▼                                                 │
-│  5. Dashboard stores tokens, redirects to app                       │
+│  5. User adds bot to their Telegram group                           │
 │                    │                                                 │
 │                    ▼                                                 │
-│  6. API validates JWT on each request using Auth0 public keys       │
+│  6. Bot verifies user has admin privileges in the group             │
 │                    │                                                 │
 │                    ▼                                                 │
-│  7. System creates/retrieves admin account using Auth0 user ID      │
-│     (sub claim from JWT)                                            │
+│  7. User can now configure bot for that group via commands          │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -157,14 +146,8 @@ The system uses a layered authentication approach with Auth0 handling all creden
 │                                                                      │
 │  Administrator A                    Administrator B                  │
 │  ┌─────────────────────┐           ┌─────────────────────┐          │
-│  │ OAuth Account       │           │ OAuth Account       │          │
-│  │ (Google: a@mail)    │           │ (GitHub: user_b)    │          │
-│  └─────────┬───────────┘           └─────────┬───────────┘          │
-│            │                                  │                      │
-│            ▼                                  ▼                      │
-│  ┌─────────────────────┐           ┌─────────────────────┐          │
-│  │ Telegram Sessions   │           │ Telegram Sessions   │          │
-│  │ • +1234567890       │           │ • +0987654321       │          │
+│  │ Telegram Account    │           │ Telegram Account    │          │
+│  │ (user_id: 12345)    │           │ (user_id: 67890)    │          │
 │  └─────────┬───────────┘           └─────────┬───────────┘          │
 │            │                                  │                      │
 │            ▼                                  ▼                      │

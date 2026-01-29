@@ -33,15 +33,12 @@ export class KeywordRepository {
   }
 
   async create(groupId: number, data: CreateKeywordRequest): Promise<number> {
-    const now = new Date().toISOString();
     return this.storage.insert({
       group_id: groupId,
       pattern: data.pattern,
       pattern_type: data.pattern_type ?? "exact",
       case_sensitive: data.case_sensitive ?? false,
       cooldown_seconds: data.cooldown_seconds ?? 0,
-      created_at: now,
-      updated_at: now,
     });
   }
 
@@ -49,10 +46,7 @@ export class KeywordRepository {
     if (Object.keys(data).length === 0) {
       return pk;
     }
-    return this.storage.update(pk, {
-      ...data,
-      updated_at: new Date().toISOString(),
-    });
+    return this.storage.update(pk, data);
   }
 
   async delete(pk: number): Promise<boolean> {

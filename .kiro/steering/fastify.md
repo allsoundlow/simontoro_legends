@@ -2,6 +2,13 @@
 
 > Related PRD: #[[file:docs/PRD-architecture.md]] (API Layer), #[[file:docs/PRD-infrastructure.md]] (Requirement 9: Logging)
 
+## Internal API Routes
+Fastify routes are used for internal APIs only — all group configuration is done via Telegram bot commands:
+- `/health` - Health check endpoints for monitoring
+- `/metrics` - Prometheus metrics endpoint
+- `/webhook/telegram` - Telegram webhook receiver
+- `/oauth/*` - OAuth callbacks for Steam account linking
+
 ## Route Registration
 - Use Fastify plugins for modular route registration
 - Group related routes in a single file under `routes/`

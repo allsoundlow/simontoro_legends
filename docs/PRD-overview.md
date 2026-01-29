@@ -8,6 +8,8 @@ The system is **multi-tenant** — any person can register as an administrator, 
 
 The focus is on **group-centric functionality** — features that benefit the gaming community as a whole rather than individual user management.
 
+**All group configuration is done directly through Telegram bot commands** — no separate admin dashboard is required. Administrators register via the bot and manage everything through chat commands.
+
 ## Platform Priority
 
 1. **Phase 1 (MVP)**: Telegram — primary platform, full feature support
@@ -18,12 +20,11 @@ The focus is on **group-centric functionality** — features that benefit the ga
 - [PRD-overview.md](./PRD-overview.md) — Introduction, platform priority, glossary (this file)
 - [PRD-tech-stack.md](./PRD-tech-stack.md) — Tech stack, repository structure, configuration
 - [PRD-architecture.md](./PRD-architecture.md) — Architecture diagrams, principles, layers
-- [PRD-auth.md](./PRD-auth.md) — Auth0, multi-tenant, Telegram connection, Steam linking
+- [PRD-auth.md](./PRD-auth.md) — Multi-tenant, Telegram account connection, Steam linking
 - [PRD-core-features.md](./PRD-core-features.md) — Keywords, stats, custom commands
 - [PRD-platform.md](./PRD-platform.md) — Platform integration & message abstraction
 - [PRD-infrastructure.md](./PRD-infrastructure.md) — Persistence, logging, monitoring
 - [PRD-commands.md](./PRD-commands.md) — Command parsing, group administration
-- [PRD-admin-dashboard.md](./PRD-admin-dashboard.md) — Admin dashboard requirements
 
 ## Glossary
 
@@ -35,6 +36,5 @@ The focus is on **group-centric functionality** — features that benefit the ga
 - **Command_Handler**: The component that parses and routes commands to appropriate handlers
 - **Group_Config**: The configuration settings for the bot within a specific group
 - **Custom_Command**: A group-defined command with a trigger and response template
-- **Admin_Dashboard**: A web interface for administrators to configure bot commands, keywords, and view usage statistics
-- **Administrator**: A registered user who manages one or more group configurations (isolated from other admins)
-- **Telegram_Session**: The authenticated connection to Telegram established via QR code or phone number
+- **Administrator**: A registered user who manages one or more group configurations (isolated from other admins), authenticated via their Telegram account
+- **Telegram_Account**: The administrator's Telegram account connected to the system for authentication and group management

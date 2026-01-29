@@ -1,4 +1,4 @@
-import type {Entity, FieldFilter, ListQuery, ListResult, StorageAdapter} from "../adapter";
+import type {Entity, FieldFilter, InsertData, ListQuery, ListResult, StorageAdapter, UpdateData} from "../adapter";
 
 export class InMemoryAdapter<T extends Entity> implements StorageAdapter<T> {
   private items: Map<number, T> = new Map();
@@ -28,16 +28,26 @@ export class InMemoryAdapter<T extends Entity> implements StorageAdapter<T> {
     };
   }
 
-  async insert(data: Omit<T, "pk">): Promise<number> {
-    const item = {pk: this.nextPk++, ...data} as T;
+  async insert(data: InsertData<T>): Promise<number> {
+    const now = new Date().toISOString();
+    const item = {
+      pk: this.nextPk++,
+      ...data,
+      created_at: now,
+      updated_at: now,
+    } as T;
     this.items.set(item.pk, item);
     return item.pk;
   }
 
-  async update(pk: number, data: Partial<Omit<T, "pk">>): Promise<number | null> {
+  async update(pk: number, data: UpdateData<T>): Promise<number | null> {
     const existing = this.items.get(pk);
     if (!existing) return null;
-    const updated = {...existing, ...data} as T;
+    const updated = {
+      ...existing,
+      ...data,
+      updated_at: new Date().toISOString(),
+    } as T;
     this.items.set(pk, updated);
     return pk;
   }

@@ -1,7 +1,7 @@
-import {type Insertable, Kysely, PostgresDialect, type Updateable} from "kysely";
+import {Kysely, PostgresDialect} from "kysely";
 import type {Pool} from "pg";
 
-import type {Entity, FieldFilter, ListQuery, ListResult, StorageAdapter} from "../adapter";
+import type {Entity, FieldFilter, InsertData, ListQuery, ListResult, StorageAdapter, UpdateData} from "../adapter";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyDatabase = Record<string, any>;
@@ -68,23 +68,23 @@ export class PostgresAdapter<T extends Entity> implements StorageAdapter<T> {
     };
   }
 
-  async insert(data: Omit<T, "pk">): Promise<number> {
+  async insert(data: InsertData<T>): Promise<number> {
     const result = await this.db
       .insertInto(this.table)
-      .values(data as Insertable<T>)
+      .values(data)
       .returning("pk")
       .executeTakeFirstOrThrow();
     return result.pk as number;
   }
 
-  async update(pk: number, data: Partial<Omit<T, "pk">>): Promise<number | null> {
+  async update(pk: number, data: UpdateData<T>): Promise<number | null> {
     if (Object.keys(data).length === 0) {
       return pk;
     }
 
     const result = await this.db
       .updateTable(this.table)
-      .set(data as unknown as Updateable<T>)
+      .set(data)
       .where("pk", "=", pk)
       .returning("pk")
       .executeTakeFirst();

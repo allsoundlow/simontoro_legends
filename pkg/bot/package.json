@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx --watch ./server.ts",
     "test": "tsx --test ./tests/**/*.test.ts",
-    "test:ci": "CONFIG_PATH=${CONFIG_PATH:-./local.test.config.json} tsx --test ./tests/**/*.test.ts"
+    "test:ci": "CONFIG_PATH=${CONFIG_PATH:-./local.test.config.json} tsx --test ./tests/**/*.test.ts",
+    "migrate": "tsx ./migrations/cli.ts up",
+    "migrate:status": "tsx ./migrations/cli.ts status"
   },
   "dependencies": {
     "@fastify/swagger": "^9.6.1",
