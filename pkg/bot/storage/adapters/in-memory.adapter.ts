@@ -35,7 +35,7 @@ export class InMemoryAdapter<T extends Entity> implements StorageAdapter<T> {
       ...data,
       created_at: now,
       updated_at: now,
-    } as T;
+    } as unknown as T;
     this.items.set(item.pk, item);
     return item.pk;
   }
@@ -43,9 +43,15 @@ export class InMemoryAdapter<T extends Entity> implements StorageAdapter<T> {
   async update(pk: number, data: UpdateData<T>): Promise<number | null> {
     const existing = this.items.get(pk);
     if (!existing) return null;
+
+    // Filter out undefined values to preserve existing fields
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([, value]) => value !== undefined),
+    );
+
     const updated = {
       ...existing,
-      ...data,
+      ...filteredData,
       updated_at: new Date().toISOString(),
     } as T;
     this.items.set(pk, updated);

@@ -27,4 +27,5 @@ export const updateAdminSchema = z.object({
   telegram_username: z.string().nullable().optional(),
   status: adminStatusSchema.optional(),
 });
+
 export type UpdateAdminRequest = z.infer<typeof updateAdminSchema>;

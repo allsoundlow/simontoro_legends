@@ -1,10 +1,5 @@
-import type {CreateKeywordRequest, Keyword, UpdateKeywordRequest} from "../schemas/keyword";
-import type {
-  FieldFilter,
-  ListQuery,
-  ListResult,
-  StorageAdapter,
-} from "../storage/adapter";
+import type {CreateKeyword, Keyword, UpdateKeyword} from "../entities";
+import type {FieldFilter, ListQuery, ListResult, StorageAdapter} from "../storage/adapter";
 
 export class KeywordRepository {
   constructor(private storage: StorageAdapter<Keyword>) {}
@@ -25,14 +20,11 @@ export class KeywordRepository {
     return this.storage.getOneByFields(fields);
   }
 
-  async findAllBy(
-    fields: FieldFilter<Keyword>,
-    query?: ListQuery,
-  ): Promise<ListResult<Keyword>> {
+  async findAllBy(fields: FieldFilter<Keyword>, query?: ListQuery): Promise<ListResult<Keyword>> {
     return this.storage.getAllByFields(fields, query);
   }
 
-  async create(groupId: number, data: CreateKeywordRequest): Promise<number> {
+  async create(groupId: number, data: CreateKeyword): Promise<number> {
     return this.storage.insert({
       group_id: groupId,
       pattern: data.pattern,
@@ -42,7 +34,7 @@ export class KeywordRepository {
     });
   }
 
-  async update(pk: number, data: UpdateKeywordRequest): Promise<number | null> {
+  async update(pk: number, data: UpdateKeyword): Promise<number | null> {
     if (Object.keys(data).length === 0) {
       return pk;
     }

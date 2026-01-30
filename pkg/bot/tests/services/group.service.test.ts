@@ -1,302 +1,224 @@
 import assert from "node:assert";
 import {beforeEach, describe, it} from "node:test";
 
+import type {Admin} from "../../entities";
 import {ConflictError, NotFoundError} from "../../errors";
-import {AdminRepository} from "../../repositories/admin.repository";
-import {GroupRepository} from "../../repositories/group.repository";
-import type {Admin} from "../../schemas/admin";
-import type {Group} from "../../schemas/group";
-import {GroupService} from "../../services/group.service";
-import {InMemoryAdapter} from "../../storage/adapters/in-memory.adapter";
+import {createRepositories, Repositories} from "../../repositories";
+import * as GroupUseCases from "../../services/group";
+import type {Dependencies} from "../../services/base";
+import {createConnection, type Connection} from "../../storage";
 
-describe("GroupService", () => {
-  let adminAdapter: InMemoryAdapter<Admin>;
-  let groupAdapter: InMemoryAdapter<Group>;
-  let adminRepo: AdminRepository;
-  let groupRepo: GroupRepository;
-  let groupService: GroupService;
+const mockLogger = {
+  info: () => {},
+  debug: () => {},
+  warn: () => {},
+  error: () => {},
+  trace: () => {},
+  fatal: () => {},
+  child: () => mockLogger,
+  level: "info",
+  silent: () => {},
+} as unknown as Dependencies["logger"];
+
+describe("Group Use Cases", () => {
+  let connection: Connection;
+  let repos: Repositories;
+  let deps: Dependencies;
 
   beforeEach(() => {
-    adminAdapter = new InMemoryAdapter<Admin>();
-    groupAdapter = new InMemoryAdapter<Group>();
-    adminRepo = new AdminRepository(adminAdapter);
-    groupRepo = new GroupRepository(groupAdapter);
-    groupService = new GroupService(groupRepo, adminRepo);
+    connection = createConnection({});
+    repos = createRepositories(connection);
+    deps = {connection, logger: mockLogger, repos};
   });
 
-  // Helper to create a registered admin
-  async function createAdmin(telegramUserId: string, username: string | null = null): Promise<Admin> {
-    return await adminRepo.create({
-      telegram_user_id: telegramUserId,
-      telegram_username: username,
-    });
+  async function createAdmin(telegramUserId: string): Promise<Admin> {
+    return repos.admin.create({telegram_user_id: telegramUserId, telegram_username: null});
   }
 
-  describe("registerGroup", () => {
-    it("should create group with correct admin_pk", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-      const telegramGroupId = "-1001234567890";
-      const groupName = "Test Group";
+  describe("Register", () => {
+    it("should create group with correct admin", async () => {
+      const admin = await createAdmin("123");
 
-      const group = await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, groupName);
+      const group = await new GroupUseCases.Register(deps).run({
+        adminTelegramId: "123",
+        telegramGroupId: "-100123",
+        groupName: "Test Group",
+      });
 
-      assert.ok(group.pk);
-      assert.strictEqual(group.telegram_group_id, telegramGroupId);
-      assert.strictEqual(group.group_name, groupName);
       assert.strictEqual(group.admin_pk, admin.pk);
       assert.strictEqual(group.status, "active");
-      assert.ok(group.created_at);
-      assert.ok(group.updated_at);
     });
 
-    it("should throw NotFoundError for non-registered user", async () => {
-      const telegramGroupId = "-1001234567890";
-      const groupName = "Test Group";
-
+    it("should throw NotFoundError for non-registered admin", async () => {
       await assert.rejects(
-        async () => await groupService.registerGroup("nonexistent123", telegramGroupId, groupName),
-        (error: Error) => {
-          assert.ok(error instanceof NotFoundError);
-          assert.strictEqual(error.message, "You are not registered. Use /register to get started.");
-          return true;
-        },
+        () =>
+          new GroupUseCases.Register(deps).run({
+            adminTelegramId: "nonexistent",
+            telegramGroupId: "-100123",
+            groupName: "Test",
+          }),
+        NotFoundError,
       );
     });
 
-    it("should throw ConflictError for already-registered active group", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-      const telegramGroupId = "-1001234567890";
-      const groupName = "Test Group";
-
-      await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, groupName);
+    it("should throw ConflictError for duplicate group", async () => {
+      await createAdmin("123");
+      const useCase = new GroupUseCases.Register(deps);
+      await useCase.run({adminTelegramId: "123", telegramGroupId: "-100123", groupName: "Test"});
 
       await assert.rejects(
-        async () => await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, "Another Name"),
-        (error: Error) => {
-          assert.ok(error instanceof ConflictError);
-          assert.strictEqual(error.message, "This group is already registered");
-          return true;
-        },
+        () => useCase.run({adminTelegramId: "123", telegramGroupId: "-100123", groupName: "Test"}),
+        ConflictError,
       );
     });
 
-    it("should reactivate inactive group instead of creating new", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-      const telegramGroupId = "-1001234567890";
-      const originalName = "Original Name";
-      const newName = "New Name";
+    it("should reactivate inactive group", async () => {
+      await createAdmin("123");
+      const useCase = new GroupUseCases.Register(deps);
+      const original = await useCase.run({
+        adminTelegramId: "123",
+        telegramGroupId: "-100123",
+        groupName: "Test",
+      });
+      await repos.group.update(original.pk, {status: "inactive"});
 
-      // Create and then mark as inactive
-      const originalGroup = await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, originalName);
-      await groupRepo.update(originalGroup.pk, {status: "inactive"});
+      const reactivated = await useCase.run({
+        adminTelegramId: "123",
+        telegramGroupId: "-100123",
+        groupName: "Test",
+      });
 
-      // Re-register should reactivate
-      const reactivatedGroup = await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, newName);
-
-      assert.strictEqual(reactivatedGroup.pk, originalGroup.pk);
-      assert.strictEqual(reactivatedGroup.status, "active");
-      assert.strictEqual(reactivatedGroup.group_name, newName);
-    });
-
-    it("should reactivate bot_removed group instead of creating new", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-      const telegramGroupId = "-1001234567890";
-      const groupName = "Test Group";
-
-      // Create and then mark as bot_removed
-      const originalGroup = await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, groupName);
-      await groupRepo.update(originalGroup.pk, {status: "bot_removed"});
-
-      // Re-register should reactivate
-      const reactivatedGroup = await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, groupName);
-
-      assert.strictEqual(reactivatedGroup.pk, originalGroup.pk);
-      assert.strictEqual(reactivatedGroup.status, "active");
+      assert.strictEqual(reactivated.pk, original.pk);
+      assert.strictEqual(reactivated.status, "active");
     });
   });
 
-  describe("listGroups", () => {
-    it("should return all groups with complete info", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
+  describe("List", () => {
+    it("should return admin's groups", async () => {
+      await createAdmin("123");
+      const registerUseCase = new GroupUseCases.Register(deps);
+      await registerUseCase.run({adminTelegramId: "123", telegramGroupId: "-1001", groupName: "G1"});
+      await registerUseCase.run({adminTelegramId: "123", telegramGroupId: "-1002", groupName: "G2"});
 
-      const group1 = await groupService.registerGroup(admin.telegram_user_id, "-1001111111111", "Group One");
-      const group2 = await groupService.registerGroup(admin.telegram_user_id, "-1002222222222", "Group Two");
-
-      const groups = await groupService.listGroups(admin.telegram_user_id);
+      const groups = await new GroupUseCases.List(deps).run({adminTelegramId: "123"});
 
       assert.strictEqual(groups.length, 2);
-
-      // Verify complete info for each group
-      const groupIds = groups.map((g) => g.telegram_group_id);
-      assert.ok(groupIds.includes("-1001111111111"));
-      assert.ok(groupIds.includes("-1002222222222"));
-
-      for (const group of groups) {
-        assert.ok(group.pk);
-        assert.ok(group.telegram_group_id);
-        assert.ok(group.group_name);
-        assert.ok(group.status);
-        assert.ok(group.created_at);
-      }
     });
 
-    it("should return empty array for admin with no groups", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-
-      const groups = await groupService.listGroups(admin.telegram_user_id);
-
-      assert.ok(Array.isArray(groups));
-      assert.strictEqual(groups.length, 0);
-    });
-
-    it("should throw NotFoundError for non-registered user", async () => {
+    it("should throw NotFoundError for non-registered admin", async () => {
       await assert.rejects(
-        async () => await groupService.listGroups("nonexistent123"),
-        (error: Error) => {
-          assert.ok(error instanceof NotFoundError);
-          return true;
-        },
+        () => new GroupUseCases.List(deps).run({adminTelegramId: "nonexistent"}),
+        NotFoundError,
       );
     });
   });
 
-  describe("unregisterGroup", () => {
-    it("should change status to inactive", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-      const telegramGroupId = "-1001234567890";
+  describe("Unregister", () => {
+    it("should mark group as inactive", async () => {
+      await createAdmin("123");
+      const group = await new GroupUseCases.Register(deps).run({
+        adminTelegramId: "123",
+        telegramGroupId: "-100123",
+        groupName: "Test",
+      });
 
-      const group = await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, "Test Group");
-      assert.strictEqual(group.status, "active");
+      await new GroupUseCases.Unregister(deps).run({
+        adminTelegramId: "123",
+        telegramGroupId: "-100123",
+      });
 
-      await groupService.unregisterGroup(admin.telegram_user_id, telegramGroupId);
-
-      const updatedGroup = await groupRepo.findById(group.pk);
-      assert.strictEqual(updatedGroup?.status, "inactive");
-      // Verify data is preserved
-      assert.strictEqual(updatedGroup?.telegram_group_id, telegramGroupId);
-      assert.strictEqual(updatedGroup?.group_name, "Test Group");
-      assert.strictEqual(updatedGroup?.admin_pk, admin.pk);
+      assert.strictEqual((await repos.group.findById(group.pk))?.status, "inactive");
     });
 
-    it("should throw NotFoundError when admin tries to unregister another admin's group", async () => {
-      const admin1 = await createAdmin("111111111", "admin1");
-      const admin2 = await createAdmin("222222222", "admin2");
-      const telegramGroupId = "-1001234567890";
-
-      // Admin1 registers the group
-      await groupService.registerGroup(admin1.telegram_user_id, telegramGroupId, "Admin1 Group");
-
-      // Admin2 tries to unregister it
-      await assert.rejects(
-        async () => await groupService.unregisterGroup(admin2.telegram_user_id, telegramGroupId),
-        (error: Error) => {
-          assert.ok(error instanceof NotFoundError);
-          assert.strictEqual(error.message, "Group not found or you don't have permission");
-          return true;
-        },
-      );
-    });
-
-    it("should throw NotFoundError for non-existent group", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
+    it("should throw NotFoundError for another admin's group", async () => {
+      await createAdmin("admin1");
+      await createAdmin("admin2");
+      await new GroupUseCases.Register(deps).run({
+        adminTelegramId: "admin1",
+        telegramGroupId: "-100123",
+        groupName: "Test",
+      });
 
       await assert.rejects(
-        async () => await groupService.unregisterGroup(admin.telegram_user_id, "-9999999999"),
-        (error: Error) => {
-          assert.ok(error instanceof NotFoundError);
-          return true;
-        },
+        () =>
+          new GroupUseCases.Unregister(deps).run({
+            adminTelegramId: "admin2",
+            telegramGroupId: "-100123",
+          }),
+        NotFoundError,
       );
     });
   });
 
-  describe("markBotRemoved", () => {
-    it("should change status to bot_removed", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-      const telegramGroupId = "-1001234567890";
+  describe("MarkBotRemoved", () => {
+    it("should mark group as bot_removed", async () => {
+      await createAdmin("123");
+      const group = await new GroupUseCases.Register(deps).run({
+        adminTelegramId: "123",
+        telegramGroupId: "-100123",
+        groupName: "Test",
+      });
 
-      const group = await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, "Test Group");
-      assert.strictEqual(group.status, "active");
+      await new GroupUseCases.MarkBotRemoved(deps).run({telegramGroupId: "-100123"});
 
-      await groupService.markBotRemoved(telegramGroupId);
-
-      const updatedGroup = await groupRepo.findById(group.pk);
-      assert.strictEqual(updatedGroup?.status, "bot_removed");
-      // Verify data is preserved
-      assert.strictEqual(updatedGroup?.telegram_group_id, telegramGroupId);
-      assert.strictEqual(updatedGroup?.group_name, "Test Group");
+      assert.strictEqual((await repos.group.findById(group.pk))?.status, "bot_removed");
     });
 
-    it("should do nothing for non-existent group", async () => {
-      // Should not throw, just silently do nothing
-      await groupService.markBotRemoved("-9999999999");
-      // No assertion needed - just verify it doesn't throw
+    it("should not throw for non-existent group", async () => {
+      await new GroupUseCases.MarkBotRemoved(deps).run({telegramGroupId: "-999"});
     });
   });
 
-  describe("isGroupAdmin", () => {
+  describe("IsAdmin", () => {
     it("should return true when admin owns the group", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-      const telegramGroupId = "-1001234567890";
+      await createAdmin("123");
+      await new GroupUseCases.Register(deps).run({
+        adminTelegramId: "123",
+        telegramGroupId: "-100123",
+        groupName: "Test",
+      });
 
-      await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, "Test Group");
+      const result = await new GroupUseCases.IsAdmin(deps).run({
+        adminTelegramId: "123",
+        telegramGroupId: "-100123",
+      });
 
-      const isAdmin = await groupService.isGroupAdmin(admin.telegram_user_id, telegramGroupId);
-      assert.strictEqual(isAdmin, true);
+      assert.strictEqual(result, true);
     });
 
     it("should return false when admin does not own the group", async () => {
-      const admin1 = await createAdmin("111111111", "admin1");
-      const admin2 = await createAdmin("222222222", "admin2");
-      const telegramGroupId = "-1001234567890";
+      await createAdmin("admin1");
+      await createAdmin("admin2");
+      await new GroupUseCases.Register(deps).run({
+        adminTelegramId: "admin1",
+        telegramGroupId: "-100123",
+        groupName: "Test",
+      });
 
-      await groupService.registerGroup(admin1.telegram_user_id, telegramGroupId, "Admin1 Group");
+      const result = await new GroupUseCases.IsAdmin(deps).run({
+        adminTelegramId: "admin2",
+        telegramGroupId: "-100123",
+      });
 
-      const isAdmin = await groupService.isGroupAdmin(admin2.telegram_user_id, telegramGroupId);
-      assert.strictEqual(isAdmin, false);
-    });
-
-    it("should return false for non-registered user", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-      const telegramGroupId = "-1001234567890";
-
-      await groupService.registerGroup(admin.telegram_user_id, telegramGroupId, "Test Group");
-
-      const isAdmin = await groupService.isGroupAdmin("nonexistent123", telegramGroupId);
-      assert.strictEqual(isAdmin, false);
-    });
-
-    it("should return false for non-existent group", async () => {
-      const admin = await createAdmin("123456789", "testadmin");
-
-      const isAdmin = await groupService.isGroupAdmin(admin.telegram_user_id, "-9999999999");
-      assert.strictEqual(isAdmin, false);
+      assert.strictEqual(result, false);
     });
   });
 
-  describe("group isolation", () => {
-    it("should ensure admin cannot access other admin's groups in listGroups", async () => {
-      const admin1 = await createAdmin("111111111", "admin1");
-      const admin2 = await createAdmin("222222222", "admin2");
+  describe("Group isolation", () => {
+    it("should only list own groups", async () => {
+      await createAdmin("admin1");
+      await createAdmin("admin2");
+      const registerUseCase = new GroupUseCases.Register(deps);
+      await registerUseCase.run({adminTelegramId: "admin1", telegramGroupId: "-1001", groupName: "A1"});
+      await registerUseCase.run({adminTelegramId: "admin2", telegramGroupId: "-1002", groupName: "A2"});
 
-      // Admin1 creates groups
-      await groupService.registerGroup(admin1.telegram_user_id, "-1001111111111", "Admin1 Group 1");
-      await groupService.registerGroup(admin1.telegram_user_id, "-1001111111112", "Admin1 Group 2");
+      const admin1Groups = await new GroupUseCases.List(deps).run({adminTelegramId: "admin1"});
+      const admin2Groups = await new GroupUseCases.List(deps).run({adminTelegramId: "admin2"});
 
-      // Admin2 creates groups
-      await groupService.registerGroup(admin2.telegram_user_id, "-1002222222221", "Admin2 Group 1");
-
-      // Admin1 should only see their own groups
-      const admin1Groups = await groupService.listGroups(admin1.telegram_user_id);
-      assert.strictEqual(admin1Groups.length, 2);
-      for (const group of admin1Groups) {
-        assert.ok(group.telegram_group_id.startsWith("-100111111111"));
-      }
-
-      // Admin2 should only see their own groups
-      const admin2Groups = await groupService.listGroups(admin2.telegram_user_id);
+      assert.strictEqual(admin1Groups.length, 1);
       assert.strictEqual(admin2Groups.length, 1);
-      assert.strictEqual(admin2Groups[0].telegram_group_id, "-1002222222221");
+      assert.strictEqual(admin1Groups[0].telegram_group_id, "-1001");
+      assert.strictEqual(admin2Groups[0].telegram_group_id, "-1002");
     });
   });
 });

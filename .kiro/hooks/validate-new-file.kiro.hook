@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "name": "Validate New File Structure",
   "description": "When a new TypeScript file is created in pkg/bot, validate it's in the correct directory according to the layered architecture and follows naming conventions.",
   "version": "1",

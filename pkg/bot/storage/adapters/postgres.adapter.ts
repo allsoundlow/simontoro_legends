@@ -1,5 +1,4 @@
-import {Kysely, PostgresDialect} from "kysely";
-import type {Pool} from "pg";
+import type {Kysely} from "kysely";
 
 import type {Entity, FieldFilter, InsertData, ListQuery, ListResult, StorageAdapter, UpdateData} from "../adapter";
 
@@ -7,16 +6,10 @@ import type {Entity, FieldFilter, InsertData, ListQuery, ListResult, StorageAdap
 type AnyDatabase = Record<string, any>;
 
 export class PostgresAdapter<T extends Entity> implements StorageAdapter<T> {
-  private db: Kysely<AnyDatabase>;
-
   constructor(
-    pool: Pool,
+    private db: Kysely<AnyDatabase>,
     private table: string,
-  ) {
-    this.db = new Kysely<AnyDatabase>({
-      dialect: new PostgresDialect({pool}),
-    });
-  }
+  ) {}
 
   async get(pk: number): Promise<T | null> {
     const result = await this.db
