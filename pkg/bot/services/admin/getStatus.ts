@@ -27,7 +27,7 @@ export class GetStatus extends Base<Input, Output> {
 
   protected async execute(data: Input): Promise<Output> {
     const admin = await this.repos.admin.getActiveByTelegramId(data.telegramUserId);
-    const groupCount = await this.repos.group.countByAdminPk(admin.pk);
+    const groupCount = await this.repos.group.countActiveByAdminPk(admin.pk);
     return {admin, groupCount};
   }
 }

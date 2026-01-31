@@ -39,6 +39,10 @@ export class GroupRepository {
     return await this.storage.count({admin_pk: adminPk});
   }
 
+  async countActiveByAdminPk(adminPk: number): Promise<number> {
+    return await this.storage.count({admin_pk: adminPk, status: "active"});
+  }
+
   async create(data: CreateGroup): Promise<Group> {
     const pk = await this.storage.insert({
       telegram_group_id: data.telegram_group_id,
