@@ -1,7 +1,7 @@
 import z from "zod";
 
 import type {Group} from "../../entities";
-import {ConflictError, NotFoundError} from "../../errors";
+import {ConflictError} from "../../errors";
 import {Base} from "../base";
 
 const inputSchema = z.object({

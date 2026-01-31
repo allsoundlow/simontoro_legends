@@ -48,7 +48,7 @@ export class Repositories {
 
   get admin(): AdminRepository {
     if (!this._admin) {
-      this._admin = new AdminRepository(createAdapter<Admin>(this.connection, "admins", this.trx));
+      this._admin = new AdminRepository(createAdapter<Admin>(this.connection, "administrators", this.trx));
     }
     return this._admin;
   }

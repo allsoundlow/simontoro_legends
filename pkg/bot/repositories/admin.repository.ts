@@ -18,6 +18,9 @@ export class AdminRepository {
       telegram_user_id: telegramUserId,
       status: "active",
     });
+    if (!admin) {
+      throw new NotFoundError("Admin not found or inactive");
+    }
     return admin;
   }
 
