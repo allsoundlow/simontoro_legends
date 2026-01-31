@@ -3,7 +3,7 @@ import {createMemoryConnection, type MemoryConnection} from "./memory.connection
 import {createPostgresConnection, type PostgresConnection} from "./postgres.connection";
 
 export type {MemoryConnection} from "./memory.connection";
-export type {PostgresConnection} from "./postgres.connection";
+export type {KyselyDb, PostgresConnection} from "./postgres.connection";
 
 export type Connection = MemoryConnection | PostgresConnection;
 

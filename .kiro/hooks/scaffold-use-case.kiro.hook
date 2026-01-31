@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Scaffold Use Case",
+  "description": "When a new use case file is created in services/, generate boilerplate code following the Clean Architecture use case pattern.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "pkg/bot/services/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new use case file was created in services/. If the file is empty or minimal (and not base.ts or base.service.ts), scaffold it following the pattern from .kiro/steering/services.md:\n\n1) Import z from 'zod' and Base from '../base'\n2) Define inputSchema with z.object() for input validation\n3) Define Input type using z.infer<typeof inputSchema>\n4) Export a class extending Base<Input, ResultType> with:\n   - protected inputSchema = inputSchema\n   - protected async checkPermissions(): Promise<void>\n   - protected async execute(data: Input): Promise<ResultType>\n\nUse the filename to derive the class name (e.g., register.ts → Register, getById.ts → GetById). Add a JSDoc comment describing what the use case does. Reference existing use cases like admin/register.ts or keyword/create.ts for examples."
+  }
+}

@@ -93,27 +93,28 @@ The application follows a **monolithic architecture** for the server. All group 
 │                              │                                      │
 │                              ▼                                      │
 │  ┌────────────────────────────────────────────────────────────────┐ │
-│  │                     Business Logic Layer                       │ │
-│  │                  (Core Domain Services)                        │ │
+│  │                   Application Layer (Use Cases)                │ │
+│  │                  (Clean Architecture Pattern)                  │ │
 │  ├────────────────────────────────────────────────────────────────┤ │
 │  │                                                                │ │
-│  │  ┌─────────────────┐  ┌─────────────────┐  ┌────────────────┐ │ │
-│  │  │ Command         │  │ Keyword         │  │ Notification   │ │ │
-│  │  │ Service         │  │ Service         │  │ Service        │ │ │
-│  │  │                 │  │                 │  │                │ │ │
-│  │  │ • Parse/Route   │  │ • Pattern Match │  │ • Format Msg   │ │ │
-│  │  │ • Cooldowns     │  │ • Cooldowns     │  │ • Send Alert   │ │ │
-│  │  │ • Aliases       │  │ • Wildcards     │  │                │ │ │
-│  │  └─────────────────┘  └─────────────────┘  └────────────────┘ │ │
+│  │  ┌─────────────────────────────────────────────────────────┐  │ │
+│  │  │ Base Use Case Classes                                   │  │ │
+│  │  │ • BaseService: validation, permissions, lifecycle hooks │  │ │
+│  │  │ • Base: transactions, repos, logger (project-specific)  │  │ │
+│  │  └─────────────────────────────────────────────────────────┘  │ │
 │  │                                                                │ │
 │  │  ┌─────────────────┐  ┌─────────────────┐  ┌────────────────┐ │ │
-│  │  │ Stats           │  │ Custom Command  │  │ Group Admin    │ │ │
-│  │  │ Service         │  │ Service         │  │ Service        │ │ │
+│  │  │ Admin           │  │ Group           │  │ Keyword        │ │ │
+│  │  │ Use Cases       │  │ Use Cases       │  │ Use Cases      │ │ │
 │  │  │                 │  │                 │  │                │ │ │
-│  │  │ • Fetch Stats   │  │ • CRUD Cmds     │  │ • Permissions  │ │ │
-│  │  │ • Compare       │  │ • Variables     │  │ • Settings     │ │ │
-│  │  │ • Cache         │  │ • Media         │  │ • Registration │ │ │
+│  │  │ • Register      │  │ • Register      │  │ • Create       │ │ │
+│  │  │ • GetStatus     │  │ • Unregister    │  │ • Update       │ │ │
+│  │  │ • DeleteAccount │  │ • List          │  │ • Delete       │ │ │
+│  │  │ • GetByTelegramId│ │ • IsAdmin       │  │ • List         │ │ │
+│  │  │                 │  │ • MarkBotRemoved│  │ • GetById      │ │ │
 │  │  └─────────────────┘  └─────────────────┘  └────────────────┘ │ │
+│  │                                                                │ │
+│  │  Each use case: one class, one operation, auto-transactions   │ │
 │  │                                                                │ │
 │  └────────────────────────────────────────────────────────────────┘ │
 │                              │                                      │
@@ -182,9 +183,31 @@ The application follows a **monolithic architecture** for the server. All group 
 - Telegram admin status used for authorization
 
 ### Layered Architecture (pkg/bot)
-- Clear separation between API, Platform Adapters, Business Logic, Data Access, and Infrastructure
+- Clear separation between API, Platform Adapters, Application (Use Cases), Data Access, and Infrastructure
 - Each layer only depends on layers below it
 - Business logic is completely isolated from platform-specific code
+
+### Use Case Pattern (Clean Architecture)
+- Business logic organized as single-purpose Use Case classes
+- Each use case handles one operation (Register, Create, Delete, etc.)
+- Built-in validation via Zod schemas
+- Built-in permission checking
+- Automatic transaction wrapping for database operations
+- Lifecycle hooks for logging, metrics, and error handling
+
+```typescript
+// Example use case structure
+export class Register extends Base<Input, Admin> {
+  protected inputSchema = inputSchema;  // Zod validation
+  
+  protected async checkPermissions(): Promise<void> { /* auth check */ }
+  protected async execute(data: Input): Promise<Admin> { /* business logic */ }
+}
+
+// Usage
+const registerAdmin = new Register({connection, logger, repos});
+const admin = await registerAdmin.run({telegramUserId: "123"});
+```
 
 ### Platform Adapter Isolation
 - Telegram and Discord adapters are isolated from business logic
@@ -199,13 +222,15 @@ The application follows a **monolithic architecture** for the server. All group 
 - Type safety maintained across the entire stack
 
 ### SOLID Principles (Applied Pragmatically)
-- **Single Responsibility**: Each service handles one domain concern
+- **Single Responsibility**: Each use case handles one business operation
 - **Open/Closed**: Platform connectors can be added without modifying existing code
 - **Liskov Substitution**: All platform adapters implement the same interface
-- **Interface Segregation**: Small, focused interfaces for repositories and services
-- **Dependency Inversion**: Business logic depends on abstractions (interfaces), not concrete implementations
+- **Interface Segregation**: Small, focused interfaces for repositories and storage adapters
+- **Dependency Inversion**: Use cases depend on abstractions (repositories), not concrete implementations
 
 ### Repository Pattern
 - Data access is abstracted through repositories
-- Kysely queries are encapsulated, not scattered through business logic
-- Easy to test business logic with mock repositories
+- Repositories work with StorageAdapter abstraction
+- Kysely queries are encapsulated in PostgresAdapter, not scattered through business logic
+- Repositories support transaction binding via `withTransaction(trx)`
+- Easy to test use cases with in-memory storage adapter

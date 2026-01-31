@@ -42,8 +42,18 @@ The project is organized as a **monorepo** with a single main application:
 ├── pkg/
 │   ├── bot/                      # Main server application (monolith)
 │   │   ├── adapters/             # Platform adapters (Telegram, Discord)
-│   │   ├── services/             # Business logic services
+│   │   ├── services/             # Use Cases (Clean Architecture)
+│   │   │   ├── base.service.ts   # Framework-agnostic base class
+│   │   │   ├── base.ts           # Project-specific base (transactions, repos)
+│   │   │   ├── admin/            # Admin domain use cases
+│   │   │   │   ├── index.ts      # Exports all use cases
+│   │   │   │   ├── register.ts   # Register use case
+│   │   │   │   └── ...
+│   │   │   ├── group/            # Group domain use cases
+│   │   │   └── keyword/          # Keyword domain use cases
 │   │   ├── repositories/         # Business queries using storage adapters
+│   │   ├── entities/             # Domain entity types
+│   │   ├── errors/               # Custom error classes
 │   │   ├── storage/              # Storage abstraction layer
 │   │   │   ├── adapter.ts        # StorageAdapter interface + types
 │   │   │   ├── adapters/         # Adapter implementations

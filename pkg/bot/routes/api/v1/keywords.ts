@@ -1,5 +1,6 @@
 import {FastifyInstance} from "fastify";
 import {ZodTypeProvider} from "fastify-type-provider-zod";
+
 import {emptyResponseSchema, errorResponseSchema} from "../../../schemas/common/error";
 import {
   createKeywordSchema,
@@ -10,15 +11,16 @@ import {
   listKeywordsQuerySchema,
   updateKeywordSchema,
 } from "../../../schemas/keyword";
-import {KeywordService} from "../../../services/keyword.service";
+import type {Dependencies} from "../../../services/base";
+import * as Keyword from "../../../services/keyword";
 
 // Plugin options for dependency injection
 export type KeywordRoutesOptions = {
-  service: KeywordService;
+  deps: Dependencies;
 };
 
-export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRoutesOptions) {
-  const {service} = opts;
+export default async function keywordRoutes(fastify: FastifyInstance, opts: KeywordRoutesOptions) {
+  const {deps} = opts;
   const server = fastify.withTypeProvider<ZodTypeProvider>();
 
   // POST /groups/:groupId/keywords - Create keyword
@@ -43,10 +45,17 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       log.info({groupId, pattern: body.pattern}, "Creating keyword");
 
-      const result = await service.create(groupId, body);
+      const createUseCase = new Keyword.Create(deps);
+      const result = await createUseCase.run({
+        groupId,
+        pattern: body.pattern,
+        patternType: body.pattern_type,
+        caseSensitive: body.case_sensitive,
+        cooldownSeconds: body.cooldown_seconds,
+      });
 
-      log.info({groupId, keywordPk: result.data.pk}, "Keyword created");
-      return reply.status(201).send({data: result.data});
+      log.info({groupId, keywordPk: result.pk}, "Keyword created");
+      return reply.status(201).send({data: result});
     },
   });
 
@@ -70,9 +79,15 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       log.debug({groupId, ...query}, "Listing keywords");
 
-      const result = await service.list(groupId, query);
+      const listUseCase = new Keyword.List(deps);
+      const result = await listUseCase.run({
+        groupId,
+        patternType: query.pattern_type,
+        limit: query.limit,
+        offset: query.offset,
+      });
 
-      return result.data;
+      return result;
     },
   });
 
@@ -95,9 +110,10 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       log.debug({groupId, keywordId}, "Getting keyword");
 
-      const result = await service.getById(groupId, keywordId);
+      const getByIdUseCase = new Keyword.GetById(deps);
+      const result = await getByIdUseCase.run({groupId, keywordId});
 
-      return {data: result.data};
+      return {data: result};
     },
   });
 
@@ -123,10 +139,18 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       log.info({groupId, keywordId}, "Updating keyword");
 
-      const result = await service.update(groupId, keywordId, body);
+      const updateUseCase = new Keyword.Update(deps);
+      const result = await updateUseCase.run({
+        groupId,
+        keywordId,
+        pattern: body.pattern,
+        patternType: body.pattern_type,
+        caseSensitive: body.case_sensitive,
+        cooldownSeconds: body.cooldown_seconds,
+      });
 
       log.info({groupId, keywordId}, "Keyword updated");
-      return {data: result.data};
+      return {data: result};
     },
   });
 
@@ -149,7 +173,8 @@ export default function keywordRoutes(fastify: FastifyInstance, opts: KeywordRou
 
       log.info({groupId, keywordId}, "Deleting keyword");
 
-      await service.delete(groupId, keywordId);
+      const deleteUseCase = new Keyword.Delete(deps);
+      await deleteUseCase.run({groupId, keywordId});
 
       log.info({groupId, keywordId}, "Keyword deleted");
       return reply.status(204).send();

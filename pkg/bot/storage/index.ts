@@ -18,7 +18,7 @@ export function createAdapter<T extends Entity>(
     case "memory":
       return new InMemoryAdapter<T>();
     case "postgres":
-      return new PostgresAdapter<T>(connection.pool, table);
+      return new PostgresAdapter<T>(connection.db, table);
   }
 }
 
@@ -26,5 +26,5 @@ export function createAdapter<T extends Entity>(
 export type {Entity, FieldFilter, ListQuery, ListResult, StorageAdapter} from "./adapter";
 
 // Re-export types and functions from connections
-export type {Connection, MemoryConnection, PostgresConnection, StorageConfig} from "./connections";
+export type {Connection, KyselyDb, MemoryConnection, PostgresConnection, StorageConfig} from "./connections";
 export {closeConnection, createConnection} from "./connections";

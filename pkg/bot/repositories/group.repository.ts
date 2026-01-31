@@ -1,5 +1,5 @@
+import type {CreateGroup, Group, GroupListItem, UpdateGroup} from "../entities";
 import {NotFoundError} from "../errors";
-import type {CreateGroupRequest, Group, GroupListItem, UpdateGroupRequest} from "../schemas/group";
 import type {StorageAdapter} from "../storage/adapter";
 
 export class GroupRepository {
@@ -9,8 +9,11 @@ export class GroupRepository {
     return await this.storage.get(pk);
   }
 
-  async findByTelegramGroupId(telegramGroupId: string): Promise<Group | null> {
-    return await this.storage.getOneByFields({telegram_group_id: telegramGroupId});
+  async findByTelegramGroupId(telegramGroupId: string, adminPk?: number): Promise<Group | null> {
+    return await this.storage.getOneByFields({
+      telegram_group_id: telegramGroupId,
+      admin_pk: adminPk,
+    });
   }
 
   async findActiveByTelegramGroupId(telegramGroupId: string): Promise<Group | null> {
@@ -18,9 +21,6 @@ export class GroupRepository {
       telegram_group_id: telegramGroupId,
       status: "active",
     });
-    if (!group) {
-      throw new NotFoundError("You are not registered. Use /register to get started.");
-    }
     return group;
   }
 
@@ -39,7 +39,11 @@ export class GroupRepository {
     return await this.storage.count({admin_pk: adminPk});
   }
 
-  async create(data: CreateGroupRequest): Promise<Group> {
+  async countActiveByAdminPk(adminPk: number): Promise<number> {
+    return await this.storage.count({admin_pk: adminPk, status: "active"});
+  }
+
+  async create(data: CreateGroup): Promise<Group> {
     const pk = await this.storage.insert({
       telegram_group_id: data.telegram_group_id,
       group_name: data.group_name,
@@ -50,12 +54,9 @@ export class GroupRepository {
     return group!;
   }
 
-  async update(pk: number, data: UpdateGroupRequest): Promise<Group | null> {
-    if (Object.keys(data).length === 0) {
-      return await this.storage.get(pk);
-    }
+  async update(pk: number, data: UpdateGroup): Promise<Group | null> {
     const updatedPk = await this.storage.update(pk, data);
-    if (updatedPk === null) {
+    if (!updatedPk) {
       return null;
     }
     return await this.storage.get(updatedPk);

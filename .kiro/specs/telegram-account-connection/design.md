@@ -338,14 +338,6 @@ export class AdminService {
     
     return {ok: true, data: undefined};
   }
-
-  // Update admin username (called when username changes)
-  async updateUsername(telegramUserId: string, newUsername: string | null): Promise<void> {
-    const admin = await this.adminRepo.findByTelegramId(telegramUserId);
-    if (admin) {
-      await this.adminRepo.update(admin.pk, {telegram_username: newUsername});
-    }
-  }
 }
 ```
 
