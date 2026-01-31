@@ -21,9 +21,6 @@ export class GroupRepository {
       telegram_group_id: telegramGroupId,
       status: "active",
     });
-    if (!group) {
-      throw new NotFoundError("No active group found");
-    }
     return group;
   }
 

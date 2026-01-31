@@ -18,9 +18,6 @@ export class AdminRepository {
       telegram_user_id: telegramUserId,
       status: "active",
     });
-    if (!admin) {
-      throw new NotFoundError("You are not registered. Use /register to get started.");
-    }
     return admin;
   }
 

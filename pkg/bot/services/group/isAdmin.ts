@@ -21,13 +21,12 @@ export class IsAdmin extends Base<Input, boolean> {
   }
 
   protected async execute(data: Input): Promise<boolean> {
-    try {
       const admin = await this.repos.admin.getActiveByTelegramId(data.adminTelegramId);
       const group = await this.repos.group.findActiveByTelegramGroupId(data.telegramGroupId);
 
+      if(!admin || !group){
+        return false
+      }
       return group.admin_pk === admin.pk;
-    } catch {
-      return false;
-    }
   }
 }
