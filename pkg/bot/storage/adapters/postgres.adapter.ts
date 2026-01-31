@@ -71,13 +71,18 @@ export class PostgresAdapter<T extends Entity> implements StorageAdapter<T> {
   }
 
   async update(pk: number, data: UpdateData<T>): Promise<number | null> {
-    if (Object.keys(data).length === 0) {
+    // Filter out undefined values to preserve existing fields
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([, value]) => value !== undefined),
+    );
+
+    if (!Object.keys(filteredData).length) {
       return pk;
     }
 
     const result = await this.db
       .updateTable(this.table)
-      .set(data)
+      .set(filteredData)
       .where("pk", "=", pk)
       .returning("pk")
       .executeTakeFirst();
