@@ -1,8 +1,8 @@
 import type {Admin, Group, Keyword} from "../entities";
 import type {Connection, KyselyDb} from "../storage";
+import type {StorageAdapter} from "../storage/adapter";
 import {InMemoryAdapter} from "../storage/adapters/in-memory.adapter";
 import {PostgresAdapter} from "../storage/adapters/postgres.adapter";
-import type {StorageAdapter} from "../storage/adapter";
 import {AdminRepository} from "./admin.repository";
 import {GroupRepository} from "./group.repository";
 import {KeywordRepository} from "./keyword.repository";

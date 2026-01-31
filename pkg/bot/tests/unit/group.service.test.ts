@@ -4,9 +4,9 @@ import {beforeEach, describe, it} from "node:test";
 import type {Admin} from "../../entities";
 import {ConflictError, NotFoundError} from "../../errors";
 import {createRepositories, Repositories} from "../../repositories";
-import * as GroupUseCases from "../../services/group";
 import type {Dependencies} from "../../services/base";
-import {createConnection, type Connection} from "../../storage";
+import * as GroupUseCases from "../../services/group";
+import {type Connection,createConnection} from "../../storage";
 
 const mockLogger = {
   info: () => {},

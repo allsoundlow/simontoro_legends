@@ -5,7 +5,7 @@ import {ConflictError, NotFoundError} from "../../errors";
 import {createRepositories, Repositories} from "../../repositories";
 import * as AdminUseCases from "../../services/admin";
 import type {Dependencies} from "../../services/base";
-import {createConnection, type Connection} from "../../storage";
+import {type Connection,createConnection} from "../../storage";
 
 const mockLogger = {
   info: () => {},
@@ -99,8 +99,16 @@ describe("Admin Use Cases", () => {
         telegramUserId: "123",
         telegramUsername: "user",
       });
-      await repos.group.create({telegram_group_id: "g1", group_name: "Group 1", admin_pk: admin.pk});
-      await repos.group.create({telegram_group_id: "g2", group_name: "Group 2", admin_pk: admin.pk});
+      await repos.group.create({
+        telegram_group_id: "g1",
+        group_name: "Group 1",
+        admin_pk: admin.pk,
+      });
+      await repos.group.create({
+        telegram_group_id: "g2",
+        group_name: "Group 2",
+        admin_pk: admin.pk,
+      });
 
       const status = await new AdminUseCases.GetStatus(deps).run({telegramUserId: "123"});
 
