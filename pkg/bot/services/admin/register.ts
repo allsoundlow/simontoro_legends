@@ -6,7 +6,7 @@ import {Base} from "../base";
 
 const inputSchema = z.object({
   telegramUserId: z.string(),
-  telegramUsername: z.string().nullable(),
+  telegramUsername: z.string().nullable().optional(),
 });
 
 type Input = z.infer<typeof inputSchema>;
