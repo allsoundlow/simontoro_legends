@@ -11,7 +11,7 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A new database migration file was created. Validate it follows .kiro/steering/database.md conventions: 1) File is named with timestamp prefix (YYYYMMDDhhminsec_description.ts), 2) Both up() and down() functions are exported, 3) Table/column names use snake_case, 4) Appropriate data types are used (timestamptz for timestamps, serial for PKs). Suggest corrections if any conventions are violated."
+    "prompt": "A new database migration file was created. Validate it follows .kiro/steering/database.md conventions: 1) File is named with timestamp prefix (YYYYMMDDHHmmss_description.ts), 2) Both up() and down() functions are exported, 3) Table/column names use snake_case, 4) Appropriate data types are used (timestamptz for timestamps, serial for PKs). Suggest corrections if any conventions are violated."
   },
   "workspaceFolderName": "saimontoro",
   "shortName": "validate-migration"
