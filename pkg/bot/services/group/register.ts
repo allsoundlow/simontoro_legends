@@ -1,7 +1,7 @@
 import z from "zod";
 
 import type {Group} from "../../entities";
-import {ConflictError} from "../../errors";
+import {ConflictError, NotFoundError} from "../../errors";
 import {Base} from "../base";
 
 const inputSchema = z.object({
@@ -32,7 +32,6 @@ export class Register extends Base<Input, Group> {
       if (existing.status === "active") {
         throw new ConflictError("This group is already registered");
       }
-      // Reactivate if previously registered but inactive/bot_removed
       const updated = await this.repos.group.update(existing.pk, {
         status: "active",
         group_name: data.groupName,

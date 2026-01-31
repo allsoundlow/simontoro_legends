@@ -9,8 +9,11 @@ export class GroupRepository {
     return await this.storage.get(pk);
   }
 
-  async findByTelegramGroupId(telegramGroupId: string): Promise<Group | null> {
-    return await this.storage.getOneByFields({telegram_group_id: telegramGroupId});
+  async findByTelegramGroupId(telegramGroupId: string, adminPk?: number): Promise<Group | null> {
+    return await this.storage.getOneByFields({
+      telegram_group_id: telegramGroupId,
+      admin_pk: adminPk,
+    });
   }
 
   async findActiveByTelegramGroupId(telegramGroupId: string): Promise<Group | null> {
