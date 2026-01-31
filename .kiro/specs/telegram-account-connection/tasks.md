@@ -61,7 +61,6 @@ This plan implements the Telegram Account Connection feature, enabling administr
     - Implement `deleteAccount(telegramUserId)` method
       - Mark all groups as inactive
       - Delete admin record
-    - Implement `updateUsername(telegramUserId, newUsername)` method
     - _Requirements: 1.1, 1.2, 1.5, 2.1, 2.3, 7.2, 8.1, 8.2, 9.1, 9.3_
 
 - [x] 5. Create Group Service

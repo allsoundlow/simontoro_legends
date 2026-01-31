@@ -109,9 +109,9 @@ The application follows a **monolithic architecture** for the server. All group 
 │  │  │                 │  │                 │  │                │ │ │
 │  │  │ • Register      │  │ • Register      │  │ • Create       │ │ │
 │  │  │ • GetStatus     │  │ • Unregister    │  │ • Update       │ │ │
-│  │  │ • UpdateUsername│  │ • List          │  │ • Delete       │ │ │
-│  │  │ • DeleteAccount │  │ • IsAdmin       │  │ • List         │ │ │
-│  │  │ • GetByTelegramId│ │ • MarkBotRemoved│  │ • GetById      │ │ │
+│  │  │ • DeleteAccount │  │ • List          │  │ • Delete       │ │ │
+│  │  │ • GetByTelegramId│ │ • IsAdmin       │  │ • List         │ │ │
+│  │  │                 │  │ • MarkBotRemoved│  │ • GetById      │ │ │
 │  │  └─────────────────┘  └─────────────────┘  └────────────────┘ │ │
 │  │                                                                │ │
 │  │  Each use case: one class, one operation, auto-transactions   │ │

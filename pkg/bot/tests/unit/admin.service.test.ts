@@ -149,22 +149,4 @@ describe("Admin Use Cases", () => {
     });
   });
 
-  describe("UpdateUsername", () => {
-    it("should update username", async () => {
-      await new AdminUseCases.Register(deps).run({telegramUserId: "123", telegramUsername: "old"});
-
-      await new AdminUseCases.UpdateUsername(deps).run({telegramUserId: "123", newUsername: "new"});
-
-      const admin = await repos.admin.findByTelegramId("123");
-      assert.strictEqual(admin?.telegram_username, "new");
-    });
-
-    it("should not throw for non-existent admin", async () => {
-      // Should silently do nothing
-      await new AdminUseCases.UpdateUsername(deps).run({
-        telegramUserId: "nonexistent",
-        newUsername: "new",
-      });
-    });
-  });
 });
