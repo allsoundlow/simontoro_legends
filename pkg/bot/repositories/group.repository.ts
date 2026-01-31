@@ -58,11 +58,8 @@ export class GroupRepository {
   }
 
   async update(pk: number, data: UpdateGroup): Promise<Group | null> {
-    if (Object.keys(data).length === 0) {
-      return await this.storage.get(pk);
-    }
     const updatedPk = await this.storage.update(pk, data);
-    if (updatedPk === null) {
+    if (!updatedPk) {
       return null;
     }
     return await this.storage.get(updatedPk);

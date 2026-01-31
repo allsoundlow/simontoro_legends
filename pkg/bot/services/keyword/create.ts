@@ -40,14 +40,11 @@ export class Create extends Base<Input, Keyword> {
       );
     }
 
-    const pk = await this.repos.keyword.create(data.groupId, {
+    return await this.repos.keyword.create(data.groupId, {
       pattern: data.pattern,
       pattern_type: patternType,
       case_sensitive: data.caseSensitive,
       cooldown_seconds: data.cooldownSeconds,
     });
-
-    const keyword = await this.repos.keyword.findById(pk);
-    return keyword!;
   }
 }

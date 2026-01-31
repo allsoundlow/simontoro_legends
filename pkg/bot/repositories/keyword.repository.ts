@@ -24,21 +24,24 @@ export class KeywordRepository {
     return this.storage.getAllByFields(fields, query);
   }
 
-  async create(groupId: number, data: CreateKeyword): Promise<number> {
-    return this.storage.insert({
+  async create(groupId: number, data: CreateKeyword): Promise<Keyword> {
+    const pk = await this.storage.insert({
       group_id: groupId,
       pattern: data.pattern,
       pattern_type: data.pattern_type ?? "exact",
       case_sensitive: data.case_sensitive ?? false,
       cooldown_seconds: data.cooldown_seconds ?? 0,
     });
+    const keyword = await this.storage.get(pk);
+    return keyword!;
   }
 
-  async update(pk: number, data: UpdateKeyword): Promise<number | null> {
-    if (Object.keys(data).length === 0) {
-      return pk;
+  async update(pk: number, data: UpdateKeyword): Promise<Keyword | null> {
+    const updatedPk = await this.storage.update(pk, data);
+    if (!updatedPk) {
+      return null;
     }
-    return this.storage.update(pk, data);
+    return await this.storage.get(updatedPk);
   }
 
   async delete(pk: number): Promise<boolean> {

@@ -50,18 +50,17 @@ export class Update extends Base<Input, Keyword> {
       }
     }
 
-    const pk = await this.repos.keyword.update(data.keywordId, {
+    const updated = await this.repos.keyword.update(data.keywordId, {
       pattern: data.pattern,
       pattern_type: data.patternType,
       case_sensitive: data.caseSensitive,
       cooldown_seconds: data.cooldownSeconds,
     });
 
-    if (pk === null) {
+    if (!updated) {
       throw new NotFoundError(`Keyword ${data.keywordId} not found during update`);
     }
 
-    const updated = await this.repos.keyword.findById(pk);
-    return updated!;
+    return updated;
   }
 }
