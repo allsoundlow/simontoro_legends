@@ -4,6 +4,7 @@ import {serializerCompiler, validatorCompiler} from "fastify-type-provider-zod";
 import {AppConfig} from "./config";
 import errorHandler from "./plugins/error-handler";
 import swagger from "./plugins/swagger";
+import telegram from "./plugins/telegram";
 import {createRepositories} from "./repositories";
 import keywordRoutes from "./routes/api/v1/keywords";
 import root from "./routes/root";
@@ -33,6 +34,10 @@ const app: FastifyPluginAsync<{config: AppConfig; appPath: string}> = async (
   };
 
   await fastify.register(keywordRoutes, {prefix: "/api/v1/", deps});
+
+  if (opts.config.telegram) {
+    await fastify.register(telegram, {config: opts.config.telegram, deps});
+  }
 };
 
 export default app;

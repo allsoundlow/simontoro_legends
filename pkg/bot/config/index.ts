@@ -18,6 +18,12 @@ export const pgConfigSchema = z.object({
 
 export type PgConfig = z.infer<typeof pgConfigSchema>;
 
+export const telegramConfigSchema = z.object({
+  token: z.string().min(1),
+});
+
+export type TelegramConfig = z.infer<typeof telegramConfigSchema>;
+
 export const configSchema = z.object({
   port: z.number().int().positive(),
   host: z.string(),
@@ -27,6 +33,8 @@ export const configSchema = z.object({
   }),
   // If no database config → use InMemoryAdapter
   pg: pgConfigSchema.optional(),
+  // Telegram bot config - optional to allow running without bot
+  telegram: telegramConfigSchema.optional(),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

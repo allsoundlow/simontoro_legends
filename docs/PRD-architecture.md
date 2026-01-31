@@ -215,6 +215,39 @@ const admin = await registerAdmin.run({telegramUserId: "123"});
 - Platform-specific formatting happens only in the adapter layer
 - Adding a new chat platform requires only a new adapter, no changes to business logic
 
+### Declarative Command Routing (Telegram)
+
+The Telegram adapter uses a declarative command definition pattern where commands are configured as data structures rather than imperative handlers:
+
+```typescript
+// Command definition structure
+{
+  pattern: /^\/register$/,                    // RegExp pattern matching
+  useCase: new Register(deps),                // Use case instance
+  parseInput: (ctx) => ({                     // Extract input from Telegram context
+    telegramUserId: String(ctx.from!.id),
+    telegramUsername: ctx.from!.username ?? null,
+  }),
+  response: {                                 // Response formatting
+    type: "text",
+    template: "Welcome, {{telegram_username}}!",
+  },
+  errorResponse: {                            // Error handling
+    mappings: [{errorType: "ConflictError", template: "Already registered!"}],
+    defaultTemplate: "Failed: {{message}}",
+  },
+}
+```
+
+Key features:
+- **Pattern matching**: RegExp patterns match incoming message text
+- **Input parsing**: Functions extract use case input from platform context
+- **Template interpolation**: `{{field}}` placeholders with dot notation for nested access
+- **Response types**: text, text_with_keyboard, list, silent
+- **Error mapping**: Map error types to user-friendly messages
+
+This pattern reduces boilerplate, keeps command definitions co-located with their configuration, and maintains type safety across the command handling pipeline.
+
 ### API-First Design
 - Fastify routes define API contracts using Zod schemas
 - OpenAPI/Swagger documentation auto-generated from schemas
