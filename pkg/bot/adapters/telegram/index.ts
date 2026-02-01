@@ -1,8 +1,18 @@
+export {CommandRegistry, commandRegistry} from "./command-registry";
+export {createAdminCommands, createHelpCommand} from "./commands";
+export {
+  formatErrorResponse,
+  formatListResponse,
+  formatResponse,
+  formatTextResponse,
+  formatTextWithKeyboardResponse,
+} from "./response-formatter";
 export type {TelegramRouterOptions} from "./router";
 export {TelegramRouter} from "./router";
-
+export {interpolate} from "./template";
 export type {
   CommandDefinition,
+  CommandMetadata,
   ErrorMapping,
   ErrorResponseConfig,
   KeyboardButton,
@@ -13,8 +23,8 @@ export type {
   TextResponse,
   TextWithKeyboardResponse,
 } from "./types";
-
 export {
+  commandMetadataSchema,
   errorMappingSchema,
   errorResponseConfigSchema,
   keyboardButtonSchema,
@@ -25,15 +35,3 @@ export {
   textResponseSchema,
   textWithKeyboardResponseSchema,
 } from "./types";
-
-export {
-  formatErrorResponse,
-  formatListResponse,
-  formatResponse,
-  formatTextResponse,
-  formatTextWithKeyboardResponse,
-} from "./response-formatter";
-
-export {interpolate} from "./template";
-
-export {createAdminCommands} from "./commands";

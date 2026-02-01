@@ -7,7 +7,7 @@ import {FastifyPluginAsync} from "fastify";
 import fp from "fastify-plugin";
 import {Bot} from "grammy";
 
-import {createAdminCommands, TelegramRouter} from "../adapters/telegram";
+import {commandRegistry, createAdminCommands, createHelpCommand, TelegramRouter} from "../adapters/telegram";
 import type {TelegramConfig} from "../config";
 import type {Dependencies} from "../services/base";
 
@@ -18,10 +18,17 @@ type TelegramPluginOptions = {
 
 const telegramPlugin: FastifyPluginAsync<TelegramPluginOptions> = async (fastify, opts) => {
   const bot = new Bot(opts.config.token);
+  
+  // Create admin commands (this also registers their metadata with commandRegistry)
+  const adminCommands = createAdminCommands(opts.deps);
+  
+  // Create help command with the registry
+  const helpCommand = createHelpCommand(commandRegistry);
+  
   const router = new TelegramRouter({
     bot,
     logger: fastify.log,
-    commands: createAdminCommands(opts.deps),
+    commands: [helpCommand, ...adminCommands],
   });
 
   router.registerCommands();

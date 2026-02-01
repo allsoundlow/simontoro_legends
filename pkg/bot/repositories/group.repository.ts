@@ -1,5 +1,4 @@
 import type {CreateGroup, Group, GroupListItem, UpdateGroup} from "../entities";
-import {NotFoundError} from "../errors";
 import type {StorageAdapter} from "../storage/adapter";
 
 export class GroupRepository {

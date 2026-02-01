@@ -81,6 +81,11 @@ export class TelegramRouter {
       return;
     }
 
+    // Check chat filter
+    if (!this.matchesChatFilter(ctx, matchedCommand.chatFilter)) {
+      return;
+    }
+
     const userId = ctx.from?.id;
 
     this.logger.debug({userId, pattern: matchedCommand.pattern.source}, "Command matched");
@@ -94,6 +99,30 @@ export class TelegramRouter {
     } catch (error) {
       await this.handleError(ctx, matchedCommand, error as Error, userId);
     }
+  }
+
+  /**
+   * Checks if the current chat type matches the command's chat filter.
+   */
+  private matchesChatFilter(
+    ctx: Context,
+    filter: "private" | "group" | "all" | undefined,
+  ): boolean {
+    if (!filter || filter === "all") {
+      return true;
+    }
+
+    const chatType = ctx.chat?.type;
+
+    if (filter === "private") {
+      return chatType === "private";
+    }
+
+    if (filter === "group") {
+      return chatType === "group" || chatType === "supergroup";
+    }
+
+    return true;
   }
 
   /**

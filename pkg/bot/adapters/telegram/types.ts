@@ -11,20 +11,20 @@ export const textResponseSchema = z.object({
   template: z.string(),
 });
 
-export type TextResponse<T> = z.infer<typeof textResponseSchema>;
+export type TextResponse<_T = unknown> = z.infer<typeof textResponseSchema>;
 
 export const keyboardButtonSchema = z.object({
   text: z.string(),
   callbackData: z.string(),
 });
 
-export type KeyboardButton<T> = z.infer<typeof keyboardButtonSchema>;
+export type KeyboardButton<_T = unknown> = z.infer<typeof keyboardButtonSchema>;
 
 export const keyboardConfigSchema = z.object({
   buttons: z.array(z.array(keyboardButtonSchema)),
 });
 
-export type KeyboardConfig<T> = z.infer<typeof keyboardConfigSchema>;
+export type KeyboardConfig<_T = unknown> = z.infer<typeof keyboardConfigSchema>;
 
 export const textWithKeyboardResponseSchema = z.object({
   type: z.literal("text_with_keyboard"),
@@ -32,7 +32,7 @@ export const textWithKeyboardResponseSchema = z.object({
   keyboard: keyboardConfigSchema,
 });
 
-export type TextWithKeyboardResponse<T> = z.infer<typeof textWithKeyboardResponseSchema>;
+export type TextWithKeyboardResponse<_T = unknown> = z.infer<typeof textWithKeyboardResponseSchema>;
 
 export const listResponseSchema = z.object({
   type: z.literal("list"),
@@ -81,8 +81,19 @@ export type ErrorResponseConfig = z.infer<typeof errorResponseConfigSchema>;
 
 export type CommandDefinition<TInput, TResult> = {
   pattern: RegExp;
+  chatFilter?: "private" | "group" | "all";
   useCase: {run: (input: TInput) => Promise<TResult>};
   parseInput: (ctx: Context) => TInput;
   response: ResponseConfig<TResult>;
   errorResponse?: ErrorResponseConfig;
 };
+
+export const commandMetadataSchema = z.object({
+  command: z.string().regex(/^\/\w+$/),
+  description: z.string().min(1),
+  usage: z.string().optional(),
+  category: z.string().min(1),
+  privateOnly: z.boolean().optional(),
+});
+
+export type CommandMetadata = z.infer<typeof commandMetadataSchema>;
