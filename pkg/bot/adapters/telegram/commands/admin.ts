@@ -4,9 +4,9 @@
 
 import type {Context} from "grammy";
 
-import type {Admin} from "../../../entities";
 import {DeleteAccount, GetStatus, Register} from "../../../services/admin";
 import type {Dependencies} from "../../../services/base";
+import {commandRegistry} from "../command-registry";
 import type {CommandDefinition} from "../types";
 
 type RegisterInput = {
@@ -18,10 +18,7 @@ type GetStatusInput = {
   telegramUserId: string;
 };
 
-type GetStatusOutput = {
-  admin: Admin;
-  groupCount: number;
-};
+
 
 type DeleteAccountInput = {
   telegramUserId: string;
@@ -34,6 +31,28 @@ type DeleteAccountInput = {
  * @returns Array of command definitions for admin commands
  */
 export function createAdminCommands(deps: Dependencies): CommandDefinition<unknown, unknown>[] {
+  // Register metadata for help menu
+  commandRegistry.registerMany([
+    {
+      command: "/register",
+      description: "Register as a bot admin",
+      category: "Admin Commands",
+      privateOnly: true,
+    },
+    {
+      command: "/status",
+      description: "View your account status",
+      category: "Admin Commands",
+      privateOnly: true,
+    },
+    {
+      command: "/delete_account",
+      description: "Delete your account and all associated data",
+      category: "Admin Commands",
+      privateOnly: true,
+    },
+  ]);
+
   return [
     {
       pattern: /^\/register$/,
