@@ -34,11 +34,19 @@ export function createGroupCommands(deps: Dependencies): CommandDefinition<unkno
       pattern: /^\/connect_group$/,
       chatFilter: "group",
       useCase: new Register(deps),
-      parseInput: (ctx: Context): ConnectGroupInput => ({
-        adminTelegramId: String(ctx.from!.id),
-        telegramGroupId: String(ctx.chat!.id),
-        groupName: (ctx.chat as {title?: string}).title ?? "Unnamed Group",
-      }),
+      parseInput: (ctx: Context): ConnectGroupInput => {
+        if (!ctx.from) {
+          throw new Error("Please run /connect_group from a user account (anonymous admins are not supported).");
+        }
+        if (!ctx.chat) {
+          throw new Error("Missing group context for /connect_group.");
+        }
+        return {
+          adminTelegramId: String(ctx.from.id),
+          telegramGroupId: String(ctx.chat.id),
+          groupName: (ctx.chat as {title?: string}).title ?? "Unnamed Group",
+        };
+      },
       response: {
         type: "text",
         template:
