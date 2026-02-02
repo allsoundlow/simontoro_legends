@@ -11,25 +11,43 @@ import {commandMetadataSchema} from "./types";
  */
 export class CommandRegistry {
   private commands: CommandMetadata[] = [];
+  private registeredCommands = new Set<string>();
   private categoryOrder: string[] = ["General", "Admin Commands", "Group Commands", "Keyword Commands"];
 
   /**
    * Registers a single command's metadata.
+   * Skips registration if the command is already registered.
    * @param metadata - Command metadata to register
+   * @returns true if the command was registered, false if it was already present
    */
-  register(metadata: CommandMetadata): void {
+  register(metadata: CommandMetadata): boolean {
+    if (this.registeredCommands.has(metadata.command)) {
+      return false;
+    }
     const validated = commandMetadataSchema.parse(metadata);
     this.commands.push(validated);
+    this.registeredCommands.add(validated.command);
+    return true;
   }
 
   /**
    * Registers multiple commands' metadata at once.
+   * Skips any commands that are already registered.
    * @param metadata - Array of command metadata to register
    */
   registerMany(metadata: CommandMetadata[]): void {
     for (const m of metadata) {
       this.register(m);
     }
+  }
+
+  /**
+   * Checks if a command is already registered.
+   * @param command - The command string to check (e.g., "/connect_group")
+   * @returns true if the command is already registered
+   */
+  has(command: string): boolean {
+    return this.registeredCommands.has(command);
   }
 
   /**
@@ -82,6 +100,7 @@ export class CommandRegistry {
    */
   clear(): void {
     this.commands = [];
+    this.registeredCommands.clear();
   }
 }
 

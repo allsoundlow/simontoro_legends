@@ -26,30 +26,30 @@ describe("Help Command", () => {
       assert.ok(!helpCommand.pattern.test("/helper"));
     });
 
-    it("should have private chat filter", () => {
+    it("should not have chat filter (works in all chats)", () => {
       const helpCommand = createHelpCommand(registry);
 
-      assert.strictEqual(helpCommand.chatFilter, "private");
+      assert.strictEqual(helpCommand.chatFilter, undefined);
     });
 
     it("should return empty message when no commands registered", async () => {
       registry.clear();
       const helpCommand = createHelpCommand(registry);
 
-      const result = (await helpCommand.useCase.run({})) as HelpResult;
+      const result = (await helpCommand.useCase.run({isGroupChat: false})) as HelpResult;
 
       assert.ok(result.message.includes("No commands are currently available"));
     });
 
-    it("should include all registered commands in output", async () => {
+    it("should include all registered commands in output for private chat", async () => {
       registry.clear();
       registry.registerMany([
         {command: "/help", description: "Show help", category: "General"},
-        {command: "/register", description: "Register account", category: "Admin Commands"},
+        {command: "/register", description: "Register account", category: "Admin Commands", privateOnly: true},
       ]);
 
       const helpCommand = createHelpCommand(registry);
-      const result = (await helpCommand.useCase.run({})) as HelpResult;
+      const result = (await helpCommand.useCase.run({isGroupChat: false})) as HelpResult;
 
       assert.ok(result.message.includes("/help"));
       assert.ok(result.message.includes("/register"));
@@ -57,19 +57,34 @@ describe("Help Command", () => {
       assert.ok(result.message.includes("Register account"));
     });
 
+    it("should filter out privateOnly commands in group chat", async () => {
+      registry.clear();
+      registry.registerMany([
+        {command: "/help", description: "Show help", category: "General"},
+        {command: "/register", description: "Register account", category: "Admin Commands", privateOnly: true},
+        {command: "/connect_group", description: "Connect group", category: "Group Commands"},
+      ]);
+
+      const helpCommand = createHelpCommand(registry);
+      const result = (await helpCommand.useCase.run({isGroupChat: true})) as HelpResult;
+
+      assert.ok(result.message.includes("/help"));
+      assert.ok(result.message.includes("/connect_group"));
+      assert.ok(!result.message.includes("/register"));
+    });
+
     it("should group commands by category", async () => {
       registry.clear();
       registry.registerMany([
         {command: "/help", description: "Show help", category: "General"},
-        {command: "/register", description: "Register", category: "Admin Commands"},
-        {command: "/status", description: "Status", category: "Admin Commands"},
+        {command: "/connect_group", description: "Connect", category: "Group Commands"},
       ]);
 
       const helpCommand = createHelpCommand(registry);
-      const result = (await helpCommand.useCase.run({})) as HelpResult;
+      const result = (await helpCommand.useCase.run({isGroupChat: false})) as HelpResult;
 
       assert.ok(result.message.includes("*General*"));
-      assert.ok(result.message.includes("*Admin Commands*"));
+      assert.ok(result.message.includes("*Group Commands*"));
     });
 
     it("should include usage examples when provided", async () => {
@@ -82,7 +97,7 @@ describe("Help Command", () => {
       });
 
       const helpCommand = createHelpCommand(registry);
-      const result = (await helpCommand.useCase.run({})) as HelpResult;
+      const result = (await helpCommand.useCase.run({isGroupChat: false})) as HelpResult;
 
       assert.ok(result.message.includes("/keyword add <pattern>"));
     });
@@ -96,12 +111,12 @@ describe("Help Command", () => {
       });
 
       const helpCommand = createHelpCommand(registry);
-      const result = (await helpCommand.useCase.run({})) as HelpResult;
+      const result = (await helpCommand.useCase.run({isGroupChat: false})) as HelpResult;
 
       assert.ok(result.message.includes("`/test`"));
     });
 
-    it("should include welcome header", async () => {
+    it("should include welcome header in private chat", async () => {
       registry.clear();
       registry.register({
         command: "/test",
@@ -110,10 +125,25 @@ describe("Help Command", () => {
       });
 
       const helpCommand = createHelpCommand(registry);
-      const result = (await helpCommand.useCase.run({})) as HelpResult;
+      const result = (await helpCommand.useCase.run({isGroupChat: false})) as HelpResult;
 
       assert.ok(result.message.includes("Saimontoro Help"));
       assert.ok(result.message.includes("Welcome"));
+    });
+
+    it("should show group-specific header in group chat", async () => {
+      registry.clear();
+      registry.register({
+        command: "/connect_group",
+        description: "Connect group",
+        category: "Group Commands",
+      });
+
+      const helpCommand = createHelpCommand(registry);
+      const result = (await helpCommand.useCase.run({isGroupChat: true})) as HelpResult;
+
+      assert.ok(result.message.includes("Saimontoro Help"));
+      assert.ok(result.message.includes("Available commands in this group"));
     });
   });
 });

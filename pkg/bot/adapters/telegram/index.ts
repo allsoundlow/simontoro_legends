@@ -1,5 +1,5 @@
 export {CommandRegistry, commandRegistry} from "./command-registry";
-export {createAdminCommands, createHelpCommand} from "./commands";
+export {createAdminCommands, createGroupCommands, createHelpCommand} from "./commands";
 export {
   formatErrorResponse,
   formatListResponse,

@@ -155,6 +155,7 @@ mock.reset();
 - Service business logic
 - Route handlers (using Fastify's inject via build helper)
 - Repository queries (with test database)
+- never write property tests, avoid adding fast-check as a dependency
 
 ## Test Config
 Create `pkg/bot/local.test.config.json` for test-specific settings:
