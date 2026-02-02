@@ -255,31 +255,9 @@ Unit tests should cover:
 - Command metadata is registered correctly
 - Error response mappings are configured correctly
 
-### Property-Based Tests
-
-Property-based tests validate the correctness properties using generated inputs:
-
-1. **Chat Filter Property Tests** (Properties 1, 2)
-   - Generate random private/group contexts
-   - Verify filter behavior matches expected
-
-2. **Input Extraction Property Test** (Property 3)
-   - Generate random numeric IDs and string titles
-   - Verify parseInput produces correct string outputs
-
-3. **Response Formatting Property Tests** (Properties 4-7)
-   - Generate random Group entities and error types
-   - Verify response templates produce expected output
-
 ### Integration Tests
 
 Integration tests should verify:
 - End-to-end flow from command to response in group chat
 - Command is ignored in private chat
 - Error responses are sent correctly
-
-### Test Configuration
-
-- Use `fast-check` for property-based testing
-- Minimum 100 iterations per property test
-- Tag format: **Feature: group-connection-command, Property {number}: {property_text}**
