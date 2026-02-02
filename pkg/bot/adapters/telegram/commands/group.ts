@@ -22,7 +22,7 @@ type ConnectGroupInput = {
  * @returns Array of command definitions for group commands
  */
 export function createGroupCommands(deps: Dependencies): CommandDefinition<unknown, unknown>[] {
-  // Register metadata for help menu
+  // Register metadata for help menu (deduplication handled by registry)
   commandRegistry.register({
     command: "/connect_group",
     description: "Connect this group to the bot",
