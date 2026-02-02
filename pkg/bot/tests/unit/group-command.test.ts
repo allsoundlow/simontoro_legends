@@ -1,7 +1,7 @@
 import assert from "node:assert";
-import {after, before, describe, it, mock} from "node:test";
+import {afterEach, beforeEach, describe, it, mock} from "node:test";
 
-import {CommandRegistry, commandRegistry} from "../../adapters/telegram/command-registry";
+import {commandRegistry} from "../../adapters/telegram/command-registry";
 import {createGroupCommands} from "../../adapters/telegram/commands/group";
 import {formatErrorResponse, formatResponse} from "../../adapters/telegram/response-formatter";
 import type {ErrorResponseConfig, ResponseConfig} from "../../adapters/telegram/types";
@@ -28,14 +28,12 @@ function createMockDeps(): Dependencies {
 }
 
 describe("Group Commands", () => {
-  let registry: CommandRegistry;
-
-  before(() => {
-    registry = new CommandRegistry();
+  beforeEach(() => {
+    commandRegistry.clear();
   });
 
-  after(() => {
-    registry.clear();
+  afterEach(() => {
+    commandRegistry.clear();
   });
 
   describe("createGroupCommands", () => {
