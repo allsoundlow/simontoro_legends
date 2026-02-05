@@ -1,0 +1,27 @@
+{
+  "name": "openrouter",
+  "displayName": "OpenRouter",
+  "version": "1.0.0",
+  "description": "Build AI agents with OpenRouter SDK - access 300+ models through a unified API with items-based streaming and tool support",
+  "keywords": [
+    "openrouter",
+    "ai",
+    "agent",
+    "llm",
+    "claude",
+    "gpt",
+    "gemini",
+    "llama",
+    "streaming",
+    "tools",
+    "function-calling",
+    "chat",
+    "assistant"
+  ],
+  "steeringFiles": [
+    "agent-pattern.md",
+    "tools.md",
+    "models.md",
+    "streaming.md"
+  ]
+}
