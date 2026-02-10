@@ -36,7 +36,11 @@ const app: FastifyPluginAsync<{config: AppConfig; appPath: string}> = async (
   await fastify.register(keywordRoutes, {prefix: "/api/v1/", deps});
 
   if (opts.config.telegram) {
-    await fastify.register(telegram, {config: opts.config.telegram, deps});
+    await fastify.register(telegram, {
+      config: opts.config.telegram,
+      deps,
+      openRouterConfig: opts.config.openrouter,
+    });
   }
 };
 

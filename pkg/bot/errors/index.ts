@@ -34,3 +34,13 @@ export class ValidationError extends AppError {
     this.name = "ValidationError";
   }
 }
+// 429 Rate Limit
+export class RateLimitError extends AppError {
+  constructor(
+    message: string,
+    public retryAfter: number,
+  ) {
+    super("RATE_LIMIT", message, 429);
+    this.name = "RateLimitError";
+  }
+}

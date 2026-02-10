@@ -1,3 +1,7 @@
+---
+inclusion: manual
+---
+
 # Docker Guidelines
 
 > Related PRD: #[[file:docs/PRD-infrastructure.md]] (Requirement 6: Data Persistence)
